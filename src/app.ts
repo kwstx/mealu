@@ -1,0 +1,24 @@
+import express from 'express';
+import passport from 'passport';
+import authRoutes from './routes/auth.routes';
+import profileRoutes from './routes/profile.routes';
+import adminRoutes from './routes/admin.routes';
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
+
+// Routes
+app.use('/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+export default app;

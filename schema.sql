@@ -1,5 +1,6 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- Store Table
 CREATE TABLE stores (
@@ -19,6 +20,7 @@ CREATE TABLE users (
     preferred_store_id UUID REFERENCES stores(id) ON DELETE SET NULL,
     diet_constraints TEXT[] DEFAULT '{}', -- Array of tags: e.g., '{"vegan", "gluten-free"}'
     flexible_preferences JSONB DEFAULT '{}'::jsonb, -- For flexible JSONB preference data
+    preference_bitmap BIGINT DEFAULT 0, -- Denormalized bitmap for fast optimization filtering
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -29,6 +31,11 @@ CREATE TABLE ingredients (
     name VARCHAR(255) UNIQUE NOT NULL,
     category VARCHAR(255),
     unit_conversions JSONB DEFAULT '{}'::jsonb, -- Store conversion factors (e.g., {"cup_to_grams": 240})
+    default_calories INTEGER,
+    default_protein DECIMAL(10, 2),
+    default_carbs DECIMAL(10, 2),
+    default_fat DECIMAL(10, 2),
+    diet_flags TEXT[] DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -82,6 +89,8 @@ CREATE TABLE recipes (
     carbs DECIMAL(10, 2),
     fat DECIMAL(10, 2),
     micronutrients JSONB DEFAULT '{}'::jsonb,
+    diet_tags TEXT[] DEFAULT '{}',
+    cuisine_style_id UUID REFERENCES cuisine_styles(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -132,4 +141,12 @@ CREATE TABLE meal_plan_shopping_list (
     aggregated_quantity DECIMAL(10, 2) NOT NULL,
     unit VARCHAR(50) NOT NULL,
     PRIMARY KEY (meal_plan_id, ingredient_id)
+);
+
+-- Pre-computed User Recipe Scores
+CREATE TABLE user_recipe_scores (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE,
+    score DECIMAL(10, 4) NOT NULL,
+    PRIMARY KEY (user_id, recipe_id)
 );

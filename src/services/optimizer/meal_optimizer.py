@@ -128,32 +128,141 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
             "message": "Could not find an optimal meal plan."
         }
         
-    # --- Format Output ---
+    # --- Explanation Trace (Before Local Search) ---
+    binding_constraints = []
+    for name, c in prob.constraints.items():
+        try:
+            val = value(c)
+            if val is not None and abs(val) < 1e-5:
+                binding_constraints.append(name)
+        except:
+            pass
+
+    objective_contributions = {
+        "preference_score_component": float(value(total_score)) if value(total_score) else 0.0,
+        "waste_penalty_component": float(value(total_waste)) if value(total_waste) else 0.0,
+        "distinct_ingredients_penalty": float(value(distinct_count)) if value(distinct_count) else 0.0,
+        "total_objective": float(value(prob.objective)) if value(prob.objective) else 0.0
+    }
+
+    explanation_trace = {
+        "binding_constraints": binding_constraints,
+        "objective_contributions": objective_contributions
+    }
+
+    # --- Format Initial Output ---
     selected_slots = {}
     for r in recipes:
         for s in slots:
             if value(x[r['id']][s]) == 1.0:
                 selected_slots[s] = r['id']
                 
+    # --- Secondary Local-Search Pass ---
+    import math
+    def compute_plan_metrics(plan: Dict[str, str]):
+        req_ingr = {}
+        day_nutrients = {d: {} for d in days}
+        total_score_val = 0.0
+        
+        for s_idx, r_id in plan.items():
+            r_obj = next((rc for rc in recipes if rc['id'] == r_id), None)
+            if not r_obj: continue
+            
+            total_score_val += r_obj.get('preference_score', 0)
+            
+            for i_id, qty in r_obj.get('ingredients_dict', {}).items():
+                req_ingr[i_id] = req_ingr.get(i_id, 0) + (qty * household_size)
+                
+            d_prefix = s_idx.split('_')[0] if '_' in s_idx else s_idx
+            for nut in daily_nutrition_bounds.keys():
+                day_nutrients[d_prefix][nut] = day_nutrients[d_prefix].get(nut, 0) + (r_obj.get('nutrition', {}).get(nut, 0) * household_size)
+
+        for d_prefix, nuts in day_nutrients.items():
+            for nut, bounds in daily_nutrition_bounds.items():
+                val_nut = nuts.get(nut, 0)
+                if bounds.get('min') is not None and val_nut < bounds['min'] * household_size - 1e-5:
+                    return None
+                if bounds.get('max') is not None and val_nut > bounds['max'] * household_size + 1e-5:
+                    return None
+
+        distinct = 0
+        cost = 0.0
+        waste_penalty_val = 0.0
+        for i_id, req in req_ingr.items():
+            if req > 0:
+                distinct += 1
+                ing = next((ig for ig in ingredients if ig['id'] == i_id), None)
+                if not ing: continue
+                pkg_size = ing.get('package_size', 1.0)
+                pkgs = math.ceil(req / pkg_size)
+                cost += pkgs * ing.get('unit_price', 0)
+                waste_penalty_val += (pkgs * pkg_size) - req
+                
+        if cost > budget + 1e-5:
+            return None
+            
+        objective_val = (weight_score * total_score_val) - (weight_waste * waste_penalty_val) - (weight_distinct * distinct)
+        return {"cost": cost, "distinct": distinct, "objective": objective_val, "waste": waste_penalty_val, "score": total_score_val, "req_ingr": req_ingr}
+
+    current_metrics = compute_plan_metrics(selected_slots)
+    local_search_swaps = 0
+    
+    if current_metrics:
+        improved = True
+        while improved:
+            improved = False
+            for s_idx in slots:
+                current_r = selected_slots[s_idx]
+                best_swap_r = current_r
+                best_obj = current_metrics['objective']
+                best_metrics = None
+                
+                for r_obj in recipes:
+                    if r_obj['id'] == current_r: continue
+                    proposed = selected_slots.copy()
+                    proposed[s_idx] = r_obj['id']
+                    
+                    metrics = compute_plan_metrics(proposed)
+                    if metrics and metrics['objective'] > best_obj + 1e-5:
+                        best_obj = metrics['objective']
+                        best_swap_r = r_obj['id']
+                        best_metrics = metrics
+                
+                if best_swap_r != current_r:
+                    selected_slots[s_idx] = best_swap_r
+                    current_metrics = best_metrics
+                    local_search_swaps += 1
+                    improved = True
+                    break
+
+    explanation_trace["local_search_swaps"] = local_search_swaps
+    if current_metrics:
+        explanation_trace["final_objective_contributions"] = {
+            "preference_score_component": current_metrics["score"],
+            "waste_penalty_component": current_metrics["waste"],
+            "distinct_ingredients_penalty": current_metrics["distinct"],
+            "total_objective": current_metrics["objective"]
+        }
+
+    # --- Build Final Shopping List ---
     shopping_list = []
     total_cost = 0.0
+    final_req = current_metrics["req_ingr"] if current_metrics else {}
+    
     for ing in ingredients:
-        packages = int(value(p[ing['id']]))
-        if packages > 0:
+        req_qty = final_req.get(ing['id'], 0)
+        if req_qty > 0:
+            pkg_size = ing.get('package_size', 1.0)
+            packages = math.ceil(req_qty / pkg_size)
             cost = packages * ing.get('unit_price', 0)
             total_cost += cost
-            
-            req_qty = sum(
-                (r.get('ingredients_dict', {}).get(ing['id'], 0) * household_size)
-                for r in recipes if value(x[r['id']][s]) == 1.0 for s in slots
-            )
             
             shopping_list.append({
                 "ingredient_id": ing['id'],
                 "packages": packages,
-                "package_size": ing.get('package_size', 1.0),
+                "package_size": pkg_size,
                 "required_quantity": req_qty,
-                "waste": packages * ing.get('package_size', 1.0) - req_qty,
+                "waste": (packages * pkg_size) - req_qty,
                 "unit": ing.get('unit', ''),
                 "cost": cost
             })
@@ -163,8 +272,10 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
         "success": True,
         "selected_slots": selected_slots,
         "shopping_list": shopping_list,
-        "total_cost": total_cost
+        "total_cost": total_cost,
+        "explanation_trace": explanation_trace
     }
+
 
 if __name__ == "__main__":
     try:

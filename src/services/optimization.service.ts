@@ -169,12 +169,18 @@ export class OptimizationService {
 
     // 7. Persist Results
     const mealPlanId = uuidv4();
+    const optimizationMetadata = { 
+      status: result.status, 
+      generated_at: new Date(),
+      explanation_trace: result.explanation_trace 
+    };
+
     await query(`
       INSERT INTO meal_plans (id, user_id, start_date, end_date, estimated_total_cost, optimization_metadata)
       VALUES ($1, $2, $3, $4, $5, $6)
     `, [
       mealPlanId, userId, options.startDate, options.endDate, result.total_cost, 
-      JSON.stringify({ status: result.status, generated_at: new Date() })
+      JSON.stringify(optimizationMetadata)
     ]);
 
     // Insert selected recipes

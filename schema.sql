@@ -69,6 +69,7 @@ CREATE TABLE ingredient_prices (
     price DECIMAL(10, 2) NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     unit VARCHAR(50) NOT NULL, -- e.g., 'kg', 'lb', 'piece'
+    confidence_score DECIMAL(5, 4) DEFAULT 1.0, -- Confidence score for price, 0.0 to 1.0
     recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

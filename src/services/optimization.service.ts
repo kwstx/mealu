@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { query } from '../db';
 import { v4 as uuidv4 } from 'uuid';
+import { PriceIngestionService } from './price-ingestion.service';
 
 export interface OptimizationOptions {
   startDate: Date;
@@ -9,6 +10,7 @@ export interface OptimizationOptions {
   guaranteeStandardMeals?: boolean;
   slots?: string[]; // Custom slots like ["1_breakfast", "1_lunch"]
   budgetOverride?: number;
+  priceLockWindowHours?: number;
 }
 
 export class OptimizationService {
@@ -91,26 +93,18 @@ export class OptimizationService {
       }
     }
 
-    const productsResult = await query(`
-      SELECT sp.ingredient_id, sp.unit_price, sp.package_size, sp.is_available,
-             i.name as ingredient_name
-      FROM store_products sp
-      JOIN ingredients i ON i.id = sp.ingredient_id
-      WHERE sp.store_id = $1 AND sp.ingredient_id = ANY($2) AND sp.is_available = TRUE
-    `, [storeId, Array.from(uniqueIngredientIds)]);
+    const priceLockHours = options.priceLockWindowHours || 24;
+    const { prices: effectivePrices, averageConfidence } = await PriceIngestionService.getEffectivePrices(
+      storeId,
+      Array.from(uniqueIngredientIds),
+      priceLockHours
+    );
 
-    // For simplicity, we parse package_size like "500g" to 500. 
-    // In a full implementation, you'd unify the units here.
-    const extractSize = (sizeStr: string) => {
-      const match = sizeStr.match(/(\d+(\.\d+)?)/);
-      return match ? parseFloat(match[1]) : 1.0;
-    };
-
-    const formattedIngredients = productsResult.rows.map(row => ({
-      id: row.ingredient_id,
-      unit_price: parseFloat(row.unit_price),
-      package_size: extractSize(row.package_size),
-      name: row.ingredient_name
+    const formattedIngredients = effectivePrices.map(price => ({
+      id: price.ingredient_id,
+      unit_price: price.unit_price,
+      package_size: price.package_size,
+      name: price.name
     }));
 
     // 5. Build Optimization Payload
@@ -172,7 +166,8 @@ export class OptimizationService {
     const optimizationMetadata = { 
       status: result.status, 
       generated_at: new Date(),
-      explanation_trace: result.explanation_trace 
+      explanation_trace: result.explanation_trace,
+      price_confidence: averageConfidence
     };
 
     await query(`

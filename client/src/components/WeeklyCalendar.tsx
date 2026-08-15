@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, ListRenderItem } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, StyleSheet, FlatList, Dimensions, ListRenderItem } from 'react-native';
 import MealCard, { Meal } from './MealCard';
+import { AppText as Text } from './AppText';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -30,9 +31,9 @@ const DayColumn = React.memo(({ day }: { day: DayData }) => {
 });
 
 export default function WeeklyCalendar({ days }: WeeklyCalendarProps) {
-  const renderItem: ListRenderItem<DayData> = ({ item }) => {
+  const renderItem: ListRenderItem<DayData> = useCallback(({ item }) => {
     return <DayColumn day={item} />;
-  };
+  }, []);
 
   return (
     <FlatList
@@ -42,6 +43,7 @@ export default function WeeklyCalendar({ days }: WeeklyCalendarProps) {
       horizontal
       pagingEnabled
       showsHorizontalScrollIndicator={false}
+      removeClippedSubviews={true}
       // Tune memory usage so that only ~3 day columns stay mounted
       windowSize={3}
       initialNumToRender={3}

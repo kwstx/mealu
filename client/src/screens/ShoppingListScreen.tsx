@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, SectionList, TouchableOpacity, Alert } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { AppText as Text } from '../components/AppText';
 
 interface ShoppingItem {
   id: string;
@@ -59,28 +60,28 @@ export default function ShoppingListScreen() {
     }
   };
 
-  const renderRightActions = (item: ShoppingItem) => {
+  const renderRightActions = useCallback((item: ShoppingItem) => {
     return (
       <TouchableOpacity style={styles.actionButton} onPress={() => markOwned(item)}>
         <Text style={styles.actionText}>Mark{'\n'}Owned</Text>
       </TouchableOpacity>
     );
-  };
+  }, []);
 
-  const renderItem = ({ item }: { item: ShoppingItem }) => (
+  const renderItem = useCallback(({ item }: { item: ShoppingItem }) => (
     <Swipeable renderRightActions={() => renderRightActions(item)} overshootRight={false}>
       <View style={[styles.itemContainer, item.owned && styles.itemOwned]}>
         <Text style={[styles.itemName, item.owned && styles.textOwned]}>{item.name}</Text>
         <Text style={styles.itemQuantity}>{item.quantity}</Text>
       </View>
     </Swipeable>
-  );
+  ), [renderRightActions]);
 
-  const renderSectionHeader = ({ section: { title } }: { section: AisleSection }) => (
+  const renderSectionHeader = useCallback(({ section: { title } }: { section: AisleSection }) => (
     <View style={styles.headerContainer}>
       <Text style={styles.headerText}>{title}</Text>
     </View>
-  );
+  ), []);
 
   return (
     <View style={styles.container}>
@@ -91,6 +92,10 @@ export default function ShoppingListScreen() {
         renderSectionHeader={renderSectionHeader}
         stickySectionHeadersEnabled={true}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
     </View>
   );

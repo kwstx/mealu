@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
 import WeeklyCalendar, { DayData } from '../components/WeeklyCalendar';
-
+import { AppText as Text } from '../components/AppText';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { usePlanStore } from '../store/planStore';
 

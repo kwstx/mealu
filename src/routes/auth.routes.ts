@@ -18,8 +18,8 @@ router.get(
   passport.authenticate('google', { session: false }),
   (req, res) => {
     const token = generateToken(req.user);
-    // Return token to the client. Typically, this might be a redirect with a short-lived token in the URL.
-    res.json({ token });
+    // Redirect to native mobile app via deep link
+    res.redirect(`mealu://oauth?token=${token}`);
   }
 );
 
@@ -31,7 +31,7 @@ router.post(
   passport.authenticate('apple', { session: false }),
   (req, res) => {
     const token = generateToken(req.user);
-    res.json({ token });
+    res.redirect(`mealu://oauth?token=${token}`);
   }
 );
 

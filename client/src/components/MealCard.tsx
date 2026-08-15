@@ -1,5 +1,8 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/types';
 
 export interface Meal {
   id: string;
@@ -12,13 +15,23 @@ interface MealCardProps {
   meal: Meal;
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const MealCard = memo(({ meal }: MealCardProps) => {
+  const navigation = useNavigation<NavigationProp>();
+
   return (
-    <View style={styles.card}>
+    <Pressable 
+      style={({ pressed }) => [
+        styles.card,
+        pressed && styles.cardPressed
+      ]}
+      onPress={() => navigation.navigate('MealDetail', { meal })}
+    >
       <Text style={styles.type}>{meal.type}</Text>
       <Text style={styles.title}>{meal.title}</Text>
       {meal.calories && <Text style={styles.calories}>{meal.calories} cal</Text>}
-    </View>
+    </Pressable>
   );
 });
 
@@ -35,6 +48,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: '#f0f0f0',
+  },
+  cardPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
   type: {
     fontSize: 12,

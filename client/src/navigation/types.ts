@@ -1,6 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { Meal } from '../components/MealCard';
 
 export type MainTabParamList = {
   Planner: undefined;
@@ -16,6 +17,7 @@ export type AuthStackParamList = {
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
+  MealDetail: { meal: Meal };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

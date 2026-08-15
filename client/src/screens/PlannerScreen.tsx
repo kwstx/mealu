@@ -2,20 +2,15 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
 import WeeklyCalendar, { DayData } from '../components/WeeklyCalendar';
 
-const dummyDays: DayData[] = Array.from({ length: 7 }).map((_, i) => ({
-  id: `day-${i}`,
-  date: new Date(Date.now() + i * 86400000),
-  meals: [
-    { id: `m-${i}-1`, type: 'breakfast', title: 'Oatmeal', calories: 300 },
-    { id: `m-${i}-2`, type: 'lunch', title: 'Chicken Salad', calories: 450 },
-    { id: `m-${i}-3`, type: 'dinner', title: 'Grilled Salmon', calories: 600 },
-    { id: `m-${i}-4`, type: 'snack', title: 'Apple & Almonds', calories: 150 },
-  ],
-}));
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { usePlanStore } from '../store/planStore';
 
 export default function PlannerScreen() {
   const [loading, setLoading] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const days = usePlanStore((state) => state.days);
+  const getTotalCost = usePlanStore((state) => state.getTotalCost);
+  const getTotalCalories = usePlanStore((state) => state.getTotalCalories);
 
   const startPlanning = async () => {
     setLoading(true);
@@ -84,10 +79,24 @@ export default function PlannerScreen() {
         <>
           <Button title="Generate Plan" onPress={startPlanning} />
           <View style={styles.calendarWrapper}>
-            <WeeklyCalendar days={dummyDays} />
+            <WeeklyCalendar days={days} />
           </View>
         </>
       )}
+      
+      <BottomSheet snapPoints={['15%', '30%', '50%']} index={0}>
+        <BottomSheetView style={styles.sheetContentContainer}>
+          <Text style={styles.sheetTitle}>Active Plan Totals</Text>
+          <View style={styles.totalsRow}>
+            <Text style={styles.totalLabel}>Total Cost:</Text>
+            <Text style={styles.totalValue}>${getTotalCost().toFixed(2)}</Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text style={styles.totalLabel}>Total Calories:</Text>
+            <Text style={styles.totalValue}>{getTotalCalories()} kcal</Text>
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 }
@@ -120,5 +129,32 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 20,
     width: '100%',
+  },
+  sheetContentContainer: {
+    flex: 1,
+    padding: 24,
+    alignItems: 'center',
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  totalsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  totalLabel: {
+    fontSize: 16,
+    color: '#555',
+  },
+  totalValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
   }
 });

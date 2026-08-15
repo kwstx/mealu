@@ -9,6 +9,7 @@ export interface Meal {
   title: string;
   type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   calories?: number;
+  cost?: number;
 }
 
 interface MealCardProps {
@@ -31,6 +32,7 @@ const MealCard = memo(({ meal }: MealCardProps) => {
       <Text style={styles.type}>{meal.type}</Text>
       <Text style={styles.title}>{meal.title}</Text>
       {meal.calories && <Text style={styles.calories}>{meal.calories} cal</Text>}
+      {meal.cost && <Text style={styles.cost}>${meal.cost.toFixed(2)}</Text>}
     </Pressable>
   );
 });
@@ -69,6 +71,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 6,
+  },
+  cost: {
+    fontSize: 14,
+    color: '#2e7d32',
+    fontWeight: '600',
+    marginTop: 4,
   }
 });
 

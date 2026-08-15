@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@gorhom/bottom-sheet": "^5.2.14",
     "@nozbe/watermelondb": "^0.28.0",
     "@react-native-firebase/app": "^26.2.0",
     "@react-native-firebase/messaging": "^26.2.0",
@@ -17,8 +18,10 @@
     "react-native": "0.86.2",
     "react-native-gesture-handler": "^3.2.1",
     "react-native-mmkv": "^4.3.2",
+    "react-native-reanimated": "^4.5.3",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0"
+    "react-native-screens": "~4.26.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

@@ -1,0 +1,9 @@
+{
+  "name": "AggregationModule",
+  "ios": {
+    "modules": ["AggregationModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.aggregation.AggregationModule"]
+  }
+}

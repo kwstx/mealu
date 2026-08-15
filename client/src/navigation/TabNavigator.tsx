@@ -1,28 +1,20 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { BottomTabParamList } from './types';
-import HomeScreen from '../screens/HomeScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import type { MainTabParamList } from './types';
+import PlannerScreen from '../screens/PlannerScreen';
+import ShoppingListScreen from '../screens/ShoppingListScreen';
+import HistoryScreen from '../screens/HistoryScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
-const Tab = createBottomTabNavigator<BottomTabParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function TabNavigator() {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: true,
-      }}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'Home' }}
-      />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen} 
-        options={{ title: 'Settings' }}
-      />
+    <Tab.Navigator screenOptions={{ headerShown: true }}>
+      <Tab.Screen name="Planner" component={PlannerScreen} />
+      <Tab.Screen name="ShoppingList" component={ShoppingListScreen} options={{ title: 'Shopping List' }} />
+      <Tab.Screen name="History" component={HistoryScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }

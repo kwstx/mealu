@@ -27,7 +27,12 @@ export default function MealDetailScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Pressable 
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => navigation.goBack()} 
+          style={styles.backButton}>
           <Text style={styles.backButtonText}>‹ Back</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Detail</Text>
@@ -38,19 +43,19 @@ export default function MealDetailScreen({ route, navigation }: Props) {
         <Text style={styles.title}>{meal.title}</Text>
         
         <View style={styles.macrosContainer}>
-          <View style={styles.macroBadge}>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Calories: ${meal.calories || 0}`}>
             <Text style={styles.macroValue}>{meal.calories || 0}</Text>
             <Text style={styles.macroLabel}>kcal</Text>
           </View>
-          <View style={styles.macroBadge}>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Protein: ${macros.protein} grams`}>
             <Text style={styles.macroValue}>{macros.protein}g</Text>
             <Text style={styles.macroLabel}>Protein</Text>
           </View>
-          <View style={styles.macroBadge}>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Carbs: ${macros.carbs} grams`}>
             <Text style={styles.macroValue}>{macros.carbs}g</Text>
             <Text style={styles.macroLabel}>Carbs</Text>
           </View>
-          <View style={styles.macroBadge}>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Fat: ${macros.fat} grams`}>
             <Text style={styles.macroValue}>{macros.fat}g</Text>
             <Text style={styles.macroLabel}>Fat</Text>
           </View>
@@ -63,6 +68,10 @@ export default function MealDetailScreen({ route, navigation }: Props) {
             return (
               <Pressable 
                 key={ing.id} 
+                accessible={true}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isChecked }}
+                accessibilityLabel={`${ing.name}, ${ing.amount}`}
                 style={styles.ingredientRow}
                 onPress={() => toggleIngredient(ing.id)}
               >

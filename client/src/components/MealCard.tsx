@@ -23,6 +23,9 @@ const MealCard = memo(({ meal }: MealCardProps) => {
 
   return (
     <Pressable 
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`Meal: ${meal.title}, Type: ${meal.type}, ${meal.calories ? `${meal.calories} calories,` : ''} ${meal.cost ? `Cost: $${meal.cost.toFixed(2)}` : ''}`}
       style={({ pressed }) => [
         styles.card,
         pressed && styles.cardPressed

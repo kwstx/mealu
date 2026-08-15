@@ -18,6 +18,9 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
     ingredients = input_data.get('ingredients', [])
     daily_nutrition_bounds = input_data.get('daily_nutrition_bounds', {})
     
+    locked_slots = input_data.get('locked_slots', {})
+    excluded_recipes = input_data.get('excluded_recipes', [])
+    
     # Weightings for multi-objective
     weight_score = input_data.get('weight_score', 10.0)
     weight_waste = input_data.get('weight_waste', 0.1)
@@ -93,6 +96,16 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
                 prob += day_nutrient >= min_val * household_size, f"Min_{nutrient}_day_{d}"
             if max_val is not None:
                 prob += day_nutrient <= max_val * household_size, f"Max_{nutrient}_day_{d}"
+
+    # 5. Lock slots
+    for s_idx, r_id in locked_slots.items():
+        if r_id in x and s_idx in x[r_id]:
+            prob += x[r_id][s_idx] == 1, f"Lock_{s_idx}_{r_id}"
+
+    # 6. Exclude recipes
+    for r_id in excluded_recipes:
+        if r_id in x:
+            prob += lpSum(x[r_id][s] for s in slots) == 0, f"Exclude_{r_id}"
 
     # --- Objective Function ---
     
@@ -267,12 +280,37 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
                 "cost": cost
             })
             
+    # --- Alternatives Generation ---
+    alternatives = {}
+    if current_metrics:
+        for s_idx in slots:
+            current_r = selected_slots.get(s_idx)
+            slot_alts = []
+            for r_obj in recipes:
+                if r_obj['id'] == current_r: continue
+                # Skip excluded recipes from alternatives
+                if r_obj['id'] in excluded_recipes: continue
+                
+                proposed = selected_slots.copy()
+                proposed[s_idx] = r_obj['id']
+                metrics = compute_plan_metrics(proposed)
+                if metrics:
+                    slot_alts.append({
+                        "recipe_id": r_obj['id'],
+                        "objective": metrics['objective'],
+                        "cost": metrics['cost'],
+                        "score": metrics['score']
+                    })
+            slot_alts.sort(key=lambda a: a['objective'], reverse=True)
+            alternatives[s_idx] = slot_alts[:3]
+
     return {
         "status": LpStatus[prob.status],
         "success": True,
         "selected_slots": selected_slots,
         "shopping_list": shopping_list,
         "total_cost": total_cost,
+        "alternatives": alternatives,
         "explanation_trace": explanation_trace
     }
 

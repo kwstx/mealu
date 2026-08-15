@@ -11,6 +11,8 @@ export interface OptimizationOptions {
   slots?: string[]; // Custom slots like ["1_breakfast", "1_lunch"]
   budgetOverride?: number;
   priceLockWindowHours?: number;
+  lockedSlots?: Record<string, string>;
+  excludedRecipes?: string[];
 }
 
 export class OptimizationService {
@@ -118,6 +120,8 @@ export class OptimizationService {
       },
       recipes: formattedRecipes,
       ingredients: formattedIngredients,
+      locked_slots: options.lockedSlots || {},
+      excluded_recipes: options.excludedRecipes || [],
       weight_score: 10.0,
       weight_waste: 0.1,
       weight_distinct: 1.0

@@ -113,6 +113,7 @@ CREATE TABLE store_products (
     brand VARCHAR(255),
     package_size VARCHAR(100) NOT NULL, -- e.g., '500g', '1 bunch'
     unit_price DECIMAL(10, 2) NOT NULL,
+    aisle VARCHAR(255),
     is_available BOOLEAN DEFAULT TRUE,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

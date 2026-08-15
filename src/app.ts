@@ -3,6 +3,7 @@ import passport from 'passport';
 import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
 import adminRoutes from './routes/admin.routes';
+import planRoutes from './routes/plan.routes';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(passport.initialize());
 app.use('/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/plans', planRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

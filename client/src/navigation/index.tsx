@@ -9,7 +9,24 @@ import AuthNavigator from './AuthNavigator';
 import MealDetailScreen from '../screens/MealDetailScreen';
 import { getJwtPair, storage, STORAGE_KEYS, setJwtPair } from '../storage';
 
+import * as Linking from 'expo-linking';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking = {
+  prefixes: ['myapp://', Linking.createURL('/')],
+  config: {
+    initialRouteName: 'Main' as const,
+    screens: {
+      Main: {
+        screens: {
+          History: 'history',
+        },
+      },
+      MealDetail: 'plan/:id',
+    },
+  },
+};
 
 export default function RootNavigation() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -63,7 +80,7 @@ export default function RootNavigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <>

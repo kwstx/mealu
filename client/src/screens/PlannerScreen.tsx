@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
+import WeeklyCalendar, { DayData } from '../components/WeeklyCalendar';
+
+const dummyDays: DayData[] = Array.from({ length: 7 }).map((_, i) => ({
+  id: `day-${i}`,
+  date: new Date(Date.now() + i * 86400000),
+  meals: [
+    { id: `m-${i}-1`, type: 'breakfast', title: 'Oatmeal', calories: 300 },
+    { id: `m-${i}-2`, type: 'lunch', title: 'Chicken Salad', calories: 450 },
+    { id: `m-${i}-3`, type: 'dinner', title: 'Grilled Salmon', calories: 600 },
+    { id: `m-${i}-4`, type: 'snack', title: 'Apple & Almonds', calories: 150 },
+  ],
+}));
 
 export default function PlannerScreen() {
   const [loading, setLoading] = useState(false);
@@ -69,7 +81,12 @@ export default function PlannerScreen() {
           {jobId && <Text style={styles.jobText}>Job ID: {jobId}</Text>}
         </View>
       ) : (
-        <Button title="Generate Plan" onPress={startPlanning} />
+        <>
+          <Button title="Generate Plan" onPress={startPlanning} />
+          <View style={styles.calendarWrapper}>
+            <WeeklyCalendar days={dummyDays} />
+          </View>
+        </>
       )}
     </View>
   );
@@ -99,4 +116,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
+  calendarWrapper: {
+    flex: 1,
+    marginTop: 20,
+    width: '100%',
+  }
 });

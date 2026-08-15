@@ -1,23 +1,24 @@
-import { spawn } from 'child_process';
-import path from 'path';
+import { Queue } from 'bullmq';
+import { redisConnection, redisCache } from '../db/redis';
 import { query } from '../db';
-import { v4 as uuidv4 } from 'uuid';
 import { PriceIngestionService } from './price-ingestion.service';
 
 export interface OptimizationOptions {
   startDate: Date;
   endDate: Date;
   guaranteeStandardMeals?: boolean;
-  slots?: string[]; // Custom slots like ["1_breakfast", "1_lunch"]
+  slots?: string[];
   budgetOverride?: number;
   priceLockWindowHours?: number;
   lockedSlots?: Record<string, string>;
   excludedRecipes?: string[];
 }
 
+const optimizationQueue = new Queue('meal-optimization', { connection: redisConnection });
+
 export class OptimizationService {
   /**
-   * Generates a meal plan using the Python ILP optimizer.
+   * Enqueues a meal plan generation job to BullMQ.
    */
   static async generateMealPlan(userId: string, options: OptimizationOptions) {
     // 1. Fetch User Settings
@@ -43,39 +44,51 @@ export class OptimizationService {
       }
     }
 
-    // 3. Fetch Candidate Recipes (Join with user_recipe_scores if available)
-    const recipesResult = await query(`
-      SELECT 
-        r.id, r.title, r.calories, r.protein, r.carbs, r.fat, r.diet_tags,
-        COALESCE(urs.score, 5.0) as preference_score
-      FROM recipes r
-      LEFT JOIN user_recipe_scores urs ON r.id = urs.recipe_id AND urs.user_id = $1
-      LIMIT 100 -- Limit candidate recipes to avoid solver overload
-    `, [userId]);
-
-    const candidateRecipes = recipesResult.rows;
-
-    // Fetch Recipe Ingredients
-    const recipeIds = candidateRecipes.map(r => r.id);
-    const riResult = await query(`
-      SELECT recipe_id, ingredient_id, quantity, unit
-      FROM recipe_ingredients
-      WHERE recipe_id = ANY($1)
-    `, [recipeIds]);
-
-    const recipeIngredientsMap = new Map<string, any[]>();
-    for (const row of riResult.rows) {
-      if (!recipeIngredientsMap.has(row.recipe_id)) {
-        recipeIngredientsMap.set(row.recipe_id, []);
-      }
-      recipeIngredientsMap.get(row.recipe_id)?.push({
-        ingredient_id: row.ingredient_id,
-        quantity: parseFloat(row.quantity),
-        unit: row.unit
-      });
+    // 3. Fetch & Cache Candidate Recipes (Partitioned / Prefiltered)
+    // Assume user diet tags would be fetched here in a real app
+    const cacheKey = `candidate_recipes:${userId}`;
+    let candidateRecipesStr = await redisCache.get(cacheKey);
+    let candidateRecipes;
+    
+    if (candidateRecipesStr) {
+      candidateRecipes = JSON.parse(candidateRecipesStr);
+    } else {
+      const recipesResult = await query(`
+        SELECT 
+          r.id, r.title, r.calories, r.protein, r.carbs, r.fat, r.diet_tags,
+          COALESCE(urs.score, 5.0) as preference_score
+        FROM recipes r
+        LEFT JOIN user_recipe_scores urs ON r.id = urs.recipe_id AND urs.user_id = $1
+        LIMIT 100 -- Limit candidate recipes to avoid solver overload
+      `, [userId]);
+      candidateRecipes = recipesResult.rows;
+      await redisCache.setex(cacheKey, 3600, JSON.stringify(candidateRecipes)); // Cache for 1 hr
     }
 
-    const formattedRecipes = candidateRecipes.map(r => ({
+    // Fetch Recipe Ingredients
+    const recipeIds = candidateRecipes.map((r: any) => r.id);
+    let recipeIngredientsMap = new Map<string, any[]>();
+    
+    if (recipeIds.length > 0) {
+      const riResult = await query(`
+        SELECT recipe_id, ingredient_id, quantity, unit
+        FROM recipe_ingredients
+        WHERE recipe_id = ANY($1)
+      `, [recipeIds]);
+
+      for (const row of riResult.rows) {
+        if (!recipeIngredientsMap.has(row.recipe_id)) {
+          recipeIngredientsMap.set(row.recipe_id, []);
+        }
+        recipeIngredientsMap.get(row.recipe_id)?.push({
+          ingredient_id: row.ingredient_id,
+          quantity: parseFloat(row.quantity),
+          unit: row.unit
+        });
+      }
+    }
+
+    const formattedRecipes = candidateRecipes.map((r: any) => ({
       id: r.id,
       preference_score: parseFloat(r.preference_score),
       nutrition: {
@@ -87,7 +100,7 @@ export class OptimizationService {
       ingredients: recipeIngredientsMap.get(r.id) || []
     }));
 
-    // 4. Fetch Ingredient Prices & Package Sizes for Preferred Store
+    // 4. Fetch Ingredient Prices (Uses Redis Cache inside PriceIngestionService)
     const uniqueIngredientIds = new Set<string>();
     for (const riList of recipeIngredientsMap.values()) {
       for (const ri of riList) {
@@ -115,7 +128,6 @@ export class OptimizationService {
       household_size: householdSize,
       slots,
       daily_nutrition_bounds: {
-        // Example bounds, could be passed from options
         protein: { min: 50 } 
       },
       recipes: formattedRecipes,
@@ -127,82 +139,30 @@ export class OptimizationService {
       weight_distinct: 1.0
     };
 
-    // 6. Spawn Python Process
-    const result = await new Promise<any>((resolve, reject) => {
-      const scriptPath = path.join(__dirname, 'optimizer', 'meal_optimizer.py');
-      const pyProcess = spawn('python', [scriptPath]);
-      
-      let outputData = '';
-      let errorData = '';
-
-      pyProcess.stdout.on('data', (data) => {
-        outputData += data.toString();
-      });
-
-      pyProcess.stderr.on('data', (data) => {
-        errorData += data.toString();
-      });
-
-      pyProcess.on('close', (code) => {
-        if (code !== 0) {
-          console.error("Python Error Output:", errorData);
-          return reject(new Error(`Optimizer process exited with code ${code}`));
-        }
-        
-        try {
-          const jsonResult = JSON.parse(outputData);
-          if (!jsonResult.success) {
-            return reject(new Error(jsonResult.message || 'Optimization failed'));
-          }
-          resolve(jsonResult);
-        } catch (err) {
-          console.error("Failed to parse Python output:", outputData);
-          reject(new Error('Failed to parse optimizer output'));
-        }
-      });
-
-      pyProcess.stdin.write(JSON.stringify(payload));
-      pyProcess.stdin.end();
+    // 6. Enqueue Job
+    const job = await optimizationQueue.add('solve_meal_plan', {
+      userId,
+      payload,
+      options,
+      averageConfidence
     });
 
-    // 7. Persist Results
-    const mealPlanId = uuidv4();
-    const optimizationMetadata = { 
-      status: result.status, 
-      generated_at: new Date(),
-      explanation_trace: result.explanation_trace,
-      price_confidence: averageConfidence
-    };
-
-    await query(`
-      INSERT INTO meal_plans (id, user_id, start_date, end_date, estimated_total_cost, optimization_metadata)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [
-      mealPlanId, userId, options.startDate, options.endDate, result.total_cost, 
-      JSON.stringify(optimizationMetadata)
-    ]);
-
-    // Insert selected recipes
-    const selectedRecipeIds = new Set<string>(Object.values(result.selected_slots) as string[]);
-    for (const rId of selectedRecipeIds) {
-      await query(`
-        INSERT INTO meal_plan_recipes (meal_plan_id, recipe_id)
-        VALUES ($1, $2)
-        ON CONFLICT DO NOTHING
-      `, [mealPlanId, rId]);
-    }
-
-    // Insert shopping list
-    for (const item of result.shopping_list) {
-      await query(`
-        INSERT INTO meal_plan_shopping_list (meal_plan_id, ingredient_id, aggregated_quantity, unit)
-        VALUES ($1, $2, $3, $4)
-      `, [mealPlanId, item.ingredient_id, item.packages, 'packages']); // Note: unit would need normalization
-    }
-
     return {
-      mealPlanId,
-      result
+      jobId: job.id,
+      status: 'enqueued',
+      message: 'Meal plan generation started. Please connect via WebSocket to receive updates.'
+    };
+  }
+
+  static async getJobStatus(jobId: string) {
+    const job = await optimizationQueue.getJob(jobId);
+    if (!job) return { status: 'not_found' };
+    const state = await job.getState();
+    return {
+      id: job.id,
+      status: state,
+      result: job.returnvalue,
+      failedReason: job.failedReason
     };
   }
 }

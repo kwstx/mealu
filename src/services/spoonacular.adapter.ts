@@ -20,7 +20,7 @@ export class SpoonacularAdapter {
     if (this.apiKey) {
       try {
         const query = `${quantity} ${unit} ${ingredientName}`;
-        const response = await fetch(\`https://api.spoonacular.com/recipes/guessNutrition?title=\${encodeURIComponent(query)}&apiKey=\${this.apiKey}\`);
+        const response = await fetch(`https://api.spoonacular.com/recipes/guessNutrition?title=${encodeURIComponent(query)}&apiKey=${this.apiKey}`);
         
         if (response.ok) {
           const data = await response.json();

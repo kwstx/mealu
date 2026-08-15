@@ -1,4 +1,6 @@
 import { query } from '../db';
+import { redisCache } from '../db/redis';
+import crypto from 'crypto';
 
 export interface PriceObservation {
   ingredientId: string;
@@ -77,6 +79,13 @@ export class PriceIngestionService {
     
     if (ingredientIds.length === 0) {
       return { prices: [], averageConfidence: 1.0 };
+    }
+
+    const hash = crypto.createHash('md5').update(ingredientIds.sort().join(',')).digest('hex');
+    const cacheKey = `prices:${storeId}:${hash}`;
+    const cachedStr = await redisCache.get(cacheKey);
+    if (cachedStr) {
+      return JSON.parse(cachedStr);
     }
 
     // First, fetch the fallback static catalog data
@@ -163,10 +172,13 @@ export class PriceIngestionService {
 
     const averageConfidence = count > 0 ? totalConfidence / count : 0;
 
-    return {
+    const result = {
       prices: effectivePrices,
       averageConfidence
     };
+
+    await redisCache.setex(cacheKey, 1800, JSON.stringify(result)); // Cache for 30 minutes
+    return result;
   }
 
   private static extractSize(sizeStr: string): number {

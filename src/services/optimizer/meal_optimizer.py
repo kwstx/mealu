@@ -1,6 +1,7 @@
 import sys
 import json
 import logging
+import time
 from typing import List, Dict, Any
 from pulp import (
     LpProblem, LpMaximize, LpVariable, lpSum, LpBinary, LpInteger,
@@ -132,13 +133,16 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
     
     # --- Solve ---
     # msg=False suppresses output, timeLimit prevents hanging on very hard problems
+    start_time = time.time()
     prob.solve(PULP_CBC_CMD(msg=False, timeLimit=30))
+    solve_time = time.time() - start_time
     
     if prob.status != 1: # 1 is optimal
         return {
             "status": LpStatus[prob.status],
             "success": False,
-            "message": "Could not find an optimal meal plan."
+            "message": "Could not find an optimal meal plan.",
+            "solve_time_seconds": solve_time
         }
         
     # --- Explanation Trace (Before Local Search) ---
@@ -311,7 +315,8 @@ def solve_meal_plan(input_data: Dict[str, Any]) -> Dict[str, Any]:
         "shopping_list": shopping_list,
         "total_cost": total_cost,
         "alternatives": alternatives,
-        "explanation_trace": explanation_trace
+        "explanation_trace": explanation_trace,
+        "solve_time_seconds": solve_time
     }
 
 

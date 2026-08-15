@@ -7,8 +7,10 @@ export default function App() {
   usePushNotifications();
 
   return (
-    <SafeAreaProvider>
-      <RootNavigation />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <RootNavigation />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

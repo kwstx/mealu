@@ -20,3 +20,5 @@ export const database = new Database({
     PriceSnapshot,
   ],
 });
+
+export * from './mmkv';

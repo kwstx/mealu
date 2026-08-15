@@ -1,18 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ReactNativeBiometrics from 'react-native-biometrics';
 import type { RootStackParamList } from './types';
 import TabNavigator from './TabNavigator';
 import AuthNavigator from './AuthNavigator';
 import MealDetailScreen from '../screens/MealDetailScreen';
-import { getJwtPair, storage, STORAGE_KEYS } from '../storage';
+import { getJwtPair, storage, STORAGE_KEYS, setJwtPair } from '../storage';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigation() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getJwtPair());
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
+    const initializeAuth = async () => {
+      const jwt = getJwtPair();
+      if (jwt) {
+        const rnBiometrics = new ReactNativeBiometrics();
+        try {
+          const { available } = await rnBiometrics.isSensorAvailable();
+          if (available) {
+            const { success } = await rnBiometrics.simplePrompt({ promptMessage: 'Unlock to restore session' });
+            if (success) {
+              setIsAuthenticated(true);
+            } else {
+              // Failed biometric unlock, clear token or force re-login
+              setIsAuthenticated(false);
+            }
+          } else {
+            // Biometrics not available, fallback to true if we trust the token
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error('Biometric error', error);
+          setIsAuthenticated(false);
+        }
+      }
+      setIsInitializing(false);
+    };
+
+    initializeAuth();
+
     const listener = storage.addOnValueChangedListener((key) => {
       if (key === STORAGE_KEYS.JWT_PAIR) {
         setIsAuthenticated(!!getJwtPair());
@@ -22,6 +53,14 @@ export default function RootNavigation() {
       listener.remove();
     };
   }, []);
+
+  if (isInitializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
@@ -45,3 +84,11 @@ export default function RootNavigation() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

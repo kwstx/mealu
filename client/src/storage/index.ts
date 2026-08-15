@@ -1,48 +1,22 @@
-import { MMKV } from 'react-native-mmkv';
+import { Database } from '@nozbe/watermelondb';
+import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
-export const storage = new MMKV();
+import schema from './schema';
+import RecipeCache from './models/RecipeCache';
+import PriceSnapshot from './models/PriceSnapshot';
 
-export const STORAGE_KEYS = {
-  JWT_PAIR: 'jwt_pair',
-  USER_PROFILE: 'user_profile',
-  RECENT_MEAL_PLAN: 'recent_meal_plan',
-};
-
-export const getJwtPair = () => {
-  const data = storage.getString(STORAGE_KEYS.JWT_PAIR);
-  return data ? JSON.parse(data) : null;
-};
-
-export const setJwtPair = (pair: { access: string; refresh: string } | null) => {
-  if (pair) {
-    storage.set(STORAGE_KEYS.JWT_PAIR, JSON.stringify(pair));
-  } else {
-    storage.delete(STORAGE_KEYS.JWT_PAIR);
+const adapter = new SQLiteAdapter({
+  schema,
+  jsi: true, /* JSI is recommended for React Native */
+  onSetUpError: error => {
+    console.error('Database setup failed', error);
   }
-};
+});
 
-export const getUserProfile = () => {
-  const data = storage.getString(STORAGE_KEYS.USER_PROFILE);
-  return data ? JSON.parse(data) : null;
-};
-
-export const setUserProfile = (profile: any) => {
-  if (profile) {
-    storage.set(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
-  } else {
-    storage.delete(STORAGE_KEYS.USER_PROFILE);
-  }
-};
-
-export const getRecentMealPlan = () => {
-  const data = storage.getString(STORAGE_KEYS.RECENT_MEAL_PLAN);
-  return data ? JSON.parse(data) : null;
-};
-
-export const setRecentMealPlan = (plan: any) => {
-  if (plan) {
-    storage.set(STORAGE_KEYS.RECENT_MEAL_PLAN, JSON.stringify(plan));
-  } else {
-    storage.delete(STORAGE_KEYS.RECENT_MEAL_PLAN);
-  }
-};
+export const database = new Database({
+  adapter,
+  modelClasses: [
+    RecipeCache,
+    PriceSnapshot,
+  ],
+});

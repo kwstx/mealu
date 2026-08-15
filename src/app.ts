@@ -4,6 +4,7 @@ import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
 import adminRoutes from './routes/admin.routes';
 import planRoutes from './routes/plan.routes';
+import recipeRoutes from './routes/recipe.routes';
 import { register } from './services/metrics';
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/recipes', recipeRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

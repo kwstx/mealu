@@ -21,6 +21,7 @@ CREATE TABLE users (
     diet_constraints TEXT[] DEFAULT '{}', -- Array of tags: e.g., '{"vegan", "gluten-free"}'
     flexible_preferences JSONB DEFAULT '{}'::jsonb, -- For flexible JSONB preference data
     preference_bitmap BIGINT DEFAULT 0, -- Denormalized bitmap for fast optimization filtering
+    fcm_token VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -151,4 +152,13 @@ CREATE TABLE user_recipe_scores (
     recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE,
     score DECIMAL(10, 4) NOT NULL,
     PRIMARY KEY (user_id, recipe_id)
+);
+
+-- User Owned Ingredients (Shopping List Management)
+CREATE TABLE user_owned_ingredients (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    ingredient_id UUID REFERENCES ingredients(id) ON DELETE CASCADE,
+    owned BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, ingredient_id)
 );

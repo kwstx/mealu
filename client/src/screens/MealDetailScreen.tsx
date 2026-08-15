@@ -1,28 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
+import { ApiClient } from '../api/client';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MealDetail'>;
+
+interface RecipeDetail {
+  id: string;
+  title: string;
+  prep_instructions: string;
+  calories: number;
+  protein: string;
+  carbs: string;
+  fat: string;
+  ingredients: Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+  }>;
+}
 
 export default function MealDetailScreen({ route, navigation }: Props) {
   const { meal } = route.params;
 
-  // Mock extended data since Meal currently only has basic info
-  const macros = { protein: 35, carbs: 40, fat: 12 };
-  const ingredients = [
-    { id: '1', name: 'Rolled Oats', amount: '1/2 cup' },
-    { id: '2', name: 'Almond Milk', amount: '1 cup' },
-    { id: '3', name: 'Honey', amount: '1 tbsp' },
-    { id: '4', name: 'Berries', amount: '1/4 cup' },
-  ];
-  const recipe = "1. Combine oats and almond milk in a pot over medium heat.\n2. Bring to a simmer and cook for 5 minutes, stirring occasionally.\n3. Remove from heat and stir in honey.\n4. Top with fresh berries and serve warm.";
-
+  const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
 
-  const toggleIngredient = (id: string) => {
-    setCheckedIngredients(prev => ({ ...prev, [id]: !prev[id] }));
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      try {
+        const data = await ApiClient.get(`/recipes/${meal.id}`);
+        setRecipe(data);
+      } catch (error) {
+        console.error('Failed to fetch recipe', error);
+        Alert.alert('Error', 'Could not load recipe details.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecipe();
+  }, [meal.id]);
+
+  const toggleIngredient = (name: string) => {
+    setCheckedIngredients(prev => ({ ...prev, [name]: !prev[name] }));
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centered]}>
+        <ActivityIndicator size="large" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centered]}>
+        <Text>Could not load recipe.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -40,47 +79,47 @@ export default function MealDetailScreen({ route, navigation }: Props) {
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.type}>{meal.type}</Text>
-        <Text style={styles.title}>{meal.title}</Text>
+        <Text style={styles.title}>{recipe.title || meal.title}</Text>
         
         <View style={styles.macrosContainer}>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Calories: ${meal.calories || 0}`}>
-            <Text style={styles.macroValue}>{meal.calories || 0}</Text>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Calories: ${recipe.calories || meal.calories || 0}`}>
+            <Text style={styles.macroValue}>{recipe.calories || meal.calories || 0}</Text>
             <Text style={styles.macroLabel}>kcal</Text>
           </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Protein: ${macros.protein} grams`}>
-            <Text style={styles.macroValue}>{macros.protein}g</Text>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Protein: ${recipe.protein || 0} grams`}>
+            <Text style={styles.macroValue}>{parseFloat(recipe.protein || '0')}g</Text>
             <Text style={styles.macroLabel}>Protein</Text>
           </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Carbs: ${macros.carbs} grams`}>
-            <Text style={styles.macroValue}>{macros.carbs}g</Text>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Carbs: ${recipe.carbs || 0} grams`}>
+            <Text style={styles.macroValue}>{parseFloat(recipe.carbs || '0')}g</Text>
             <Text style={styles.macroLabel}>Carbs</Text>
           </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Fat: ${macros.fat} grams`}>
-            <Text style={styles.macroValue}>{macros.fat}g</Text>
+          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Fat: ${recipe.fat || 0} grams`}>
+            <Text style={styles.macroValue}>{parseFloat(recipe.fat || '0')}g</Text>
             <Text style={styles.macroLabel}>Fat</Text>
           </View>
         </View>
 
         <Text style={styles.sectionTitle}>Ingredients Checklist</Text>
         <View style={styles.checklistCard}>
-          {ingredients.map(ing => {
-            const isChecked = !!checkedIngredients[ing.id];
+          {recipe.ingredients?.map((ing, idx) => {
+            const isChecked = !!checkedIngredients[ing.name];
             return (
               <Pressable 
-                key={ing.id} 
+                key={idx} 
                 accessible={true}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: isChecked }}
-                accessibilityLabel={`${ing.name}, ${ing.amount}`}
+                accessibilityLabel={`${ing.name}, ${ing.quantity} ${ing.unit}`}
                 style={styles.ingredientRow}
-                onPress={() => toggleIngredient(ing.id)}
+                onPress={() => toggleIngredient(ing.name)}
               >
                 <View style={[styles.checkbox, isChecked && styles.checkboxChecked]} />
                 <Text style={[styles.ingredientName, isChecked && styles.ingredientChecked]}>
                   {ing.name}
                 </Text>
                 <Text style={[styles.ingredientAmount, isChecked && styles.ingredientChecked]}>
-                  {ing.amount}
+                  {`${ing.quantity} ${ing.unit}`}
                 </Text>
               </Pressable>
             );
@@ -89,7 +128,7 @@ export default function MealDetailScreen({ route, navigation }: Props) {
 
         <Text style={styles.sectionTitle}>Instructions</Text>
         <View style={styles.recipeCard}>
-          <Text style={styles.recipeText}>{recipe}</Text>
+          <Text style={styles.recipeText}>{recipe.prep_instructions || "No instructions provided."}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -100,6 +139,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

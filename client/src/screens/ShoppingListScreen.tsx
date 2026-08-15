@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, SectionList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, SectionList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppText as Text } from '../components/AppText';
+import { ApiClient } from '../api/client';
 
 interface ShoppingItem {
   id: string;
@@ -15,37 +16,64 @@ interface AisleSection {
   data: ShoppingItem[];
 }
 
-const initialData: AisleSection[] = [
-  {
-    title: 'Produce',
-    data: [
-      { id: '1', name: 'Apples', quantity: '1 lb', owned: false },
-      { id: '2', name: 'Spinach', quantity: '1 bunch', owned: false },
-    ],
-  },
-  {
-    title: 'Dairy',
-    data: [
-      { id: '3', name: 'Milk', quantity: '1 gallon', owned: false },
-      { id: '4', name: 'Cheese', quantity: '8 oz', owned: false },
-    ],
-  },
-];
-
 export default function ShoppingListScreen() {
-  const [sections, setSections] = useState<AisleSection[]>(initialData);
+  const [sections, setSections] = useState<AisleSection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+
+  const fetchShoppingList = async () => {
+    try {
+      setIsLoading(true);
+      // 1. Fetch latest plan from history
+      const history = await ApiClient.get('/plans/history');
+      if (!history || history.length === 0) {
+        setSections([]);
+        return;
+      }
+      const latestPlanId = history[0].id;
+      setCurrentPlanId(latestPlanId);
+
+      // 2. Fetch the plan details which includes the shopping list
+      const planDetails = await ApiClient.get(`/plans/${latestPlanId}`);
+      const listItems = planDetails.shoppingList || [];
+
+      // 3. Group by aisle
+      const grouped: Record<string, ShoppingItem[]> = {};
+      listItems.forEach((item: any) => {
+        const aisle = item.aisle || 'Other';
+        if (!grouped[aisle]) {
+          grouped[aisle] = [];
+        }
+        grouped[aisle].push({
+          id: item.ingredient_id,
+          name: item.name,
+          quantity: `${item.aggregated_quantity} ${item.unit}`,
+          owned: !!item.owned,
+        });
+      });
+
+      const newSections = Object.keys(grouped).map(key => ({
+        title: key,
+        data: grouped[key]
+      }));
+
+      setSections(newSections);
+    } catch (error) {
+      console.error('Failed to fetch shopping list', error);
+      Alert.alert('Error', 'Could not load shopping list.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShoppingList();
+  }, []);
 
   const markOwned = async (item: ShoppingItem) => {
     try {
-      // Mapped directly to the PATCH endpoint used by the optimizer
-      const response = await fetch(`http://localhost:3000/optimizer/shopping-list/${item.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owned: true }),
-      });
-
-      // Even if the mock endpoint fails locally without backend, we want to update the UI for demonstration
-      // If we strictly enforce this in a mock, it'll always fail.
+      // Patch to real backend using ApiClient
+      await ApiClient.patch(`/plans/shopping-list/${item.id}`, { owned: true });
       
       // Update local state
       setSections((prev) =>
@@ -83,6 +111,14 @@ export default function ShoppingListScreen() {
     </View>
   ), []);
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SectionList
@@ -96,6 +132,11 @@ export default function ShoppingListScreen() {
         initialNumToRender={15}
         maxToRenderPerBatch={10}
         windowSize={5}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text>No shopping list available. Generate a meal plan first.</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -105,6 +146,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F7',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
   listContent: {
     paddingBottom: 20,

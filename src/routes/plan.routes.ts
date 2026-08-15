@@ -70,4 +70,28 @@ router.post('/:id/adjust', async (req, res) => {
   }
 });
 
+router.patch('/shopping-list/:ingredientId', async (req, res) => {
+  try {
+    const { ingredientId } = req.params;
+    const { owned } = req.body;
+    
+    // Import query at the top of the file if needed.
+    // Let's assume we can just require it or it's available.
+    // Actually, I should import query from '../db' at the top.
+    
+    const { query } = require('../db');
+    
+    await query(`
+      INSERT INTO user_owned_ingredients (user_id, ingredient_id, owned)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id, ingredient_id)
+      DO UPDATE SET owned = EXCLUDED.owned, updated_at = CURRENT_TIMESTAMP
+    `, [req.user.id, ingredientId, owned]);
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { getMessaging, onMessage, getToken, AuthorizationStatus, RemoteMessage } from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
+import { ApiClient } from '../api/client';
 
 export function usePushNotifications() {
   useEffect(() => {
@@ -43,19 +44,9 @@ export function usePushNotifications() {
     }
 
     async function sendTokenToBackend(token: string) {
-      // Mock API call to send token to backend
       try {
-        /*
-        await fetch('https://your-api.com/api/users/push-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token,
-            platform: Platform.OS,
-          }),
-        });
-        */
-        console.log('Successfully sent push token to backend API (Mock)');
+        await ApiClient.post('/profile/push-token', { token });
+        console.log('Successfully sent push token to backend API');
       } catch (error) {
         console.error('Failed to send token to backend:', error);
       }

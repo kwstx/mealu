@@ -3,6 +3,7 @@ import { authenticateJWT, AuthRequest } from '../middleware/jwtAuth';
 import { ProfileService } from '../services/profile.service';
 import { ProfileSchema } from '../schemas/profile.schema';
 import { ZodError } from 'zod';
+import { query } from '../db';
 
 const router = Router();
 
@@ -37,6 +38,25 @@ router.put('/', authenticateJWT, async (req: Request, res: Response) => {
     if (error instanceof ZodError) {
       return res.status(400).json({ error: 'Validation failed', details: error.issues });
     }
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update Push Token
+router.post('/push-token', authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).user!.id;
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+    
+    await query('UPDATE users SET fcm_token = $1 WHERE id = $2', [token, userId]);
+    
+    res.json({ success: true });
+  } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }

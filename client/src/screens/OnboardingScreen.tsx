@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Image } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Image, ScrollView } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { AppText as Text } from '../components/AppText';
@@ -86,8 +86,156 @@ const COUNTRIES = [
   { id: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
   { id: 'CA', name: 'Canada', flag: '🇨🇦' },
   { id: 'AU', name: 'Australia', flag: '🇦🇺' },
+  { id: 'EU', name: 'Europe', flag: '🇪🇺' },
+  { id: 'NZ', name: 'New Zealand', flag: '🇳🇿' },
+  { id: 'BR', name: 'Brazil', flag: '🇧🇷' },
   { id: 'OTHER', name: 'Other', flag: '🌍' },
 ];
+
+const SUB_COUNTRIES: Record<string, {id: string, name: string, flag: string}[]> = {
+  'EU': [
+    { id: 'FR', name: 'France', flag: '🇫🇷' },
+    { id: 'DE', name: 'Germany', flag: '🇩🇪' },
+    { id: 'IT', name: 'Italy', flag: '🇮🇹' },
+    { id: 'ES', name: 'Spain', flag: '🇪🇸' },
+    { id: 'NL', name: 'Netherlands', flag: '🇳🇱' },
+    { id: 'SE', name: 'Sweden', flag: '🇸🇪' },
+    { id: 'PL', name: 'Poland', flag: '🇵🇱' },
+    { id: 'IE', name: 'Ireland', flag: '🇮🇪' },
+    { id: 'BE', name: 'Belgium', flag: '🇧🇪' },
+    { id: 'AT', name: 'Austria', flag: '🇦🇹' },
+  ],
+  'US': [
+    { id: 'AL', name: 'Alabama', flag: '🇺🇸' },
+    { id: 'AK', name: 'Alaska', flag: '🇺🇸' },
+    { id: 'AZ', name: 'Arizona', flag: '🇺🇸' },
+    { id: 'AR', name: 'Arkansas', flag: '🇺🇸' },
+    { id: 'CA', name: 'California', flag: '🇺🇸' },
+    { id: 'CO', name: 'Colorado', flag: '🇺🇸' },
+    { id: 'CT', name: 'Connecticut', flag: '🇺🇸' },
+    { id: 'DE', name: 'Delaware', flag: '🇺🇸' },
+    { id: 'FL', name: 'Florida', flag: '🇺🇸' },
+    { id: 'GA', name: 'Georgia', flag: '🇺🇸' },
+    { id: 'HI', name: 'Hawaii', flag: '🇺🇸' },
+    { id: 'ID', name: 'Idaho', flag: '🇺🇸' },
+    { id: 'IL', name: 'Illinois', flag: '🇺🇸' },
+    { id: 'IN', name: 'Indiana', flag: '🇺🇸' },
+    { id: 'IA', name: 'Iowa', flag: '🇺🇸' },
+    { id: 'KS', name: 'Kansas', flag: '🇺🇸' },
+    { id: 'KY', name: 'Kentucky', flag: '🇺🇸' },
+    { id: 'LA', name: 'Louisiana', flag: '🇺🇸' },
+    { id: 'ME', name: 'Maine', flag: '🇺🇸' },
+    { id: 'MD', name: 'Maryland', flag: '🇺🇸' },
+    { id: 'MA', name: 'Massachusetts', flag: '🇺🇸' },
+    { id: 'MI', name: 'Michigan', flag: '🇺🇸' },
+    { id: 'MN', name: 'Minnesota', flag: '🇺🇸' },
+    { id: 'MS', name: 'Mississippi', flag: '🇺🇸' },
+    { id: 'MO', name: 'Missouri', flag: '🇺🇸' },
+    { id: 'MT', name: 'Montana', flag: '🇺🇸' },
+    { id: 'NE', name: 'Nebraska', flag: '🇺🇸' },
+    { id: 'NV', name: 'Nevada', flag: '🇺🇸' },
+    { id: 'NH', name: 'New Hampshire', flag: '🇺🇸' },
+    { id: 'NJ', name: 'New Jersey', flag: '🇺🇸' },
+    { id: 'NM', name: 'New Mexico', flag: '🇺🇸' },
+    { id: 'NY', name: 'New York', flag: '🇺🇸' },
+    { id: 'NC', name: 'North Carolina', flag: '🇺🇸' },
+    { id: 'ND', name: 'North Dakota', flag: '🇺🇸' },
+    { id: 'OH', name: 'Ohio', flag: '🇺🇸' },
+    { id: 'OK', name: 'Oklahoma', flag: '🇺🇸' },
+    { id: 'OR', name: 'Oregon', flag: '🇺🇸' },
+    { id: 'PA', name: 'Pennsylvania', flag: '🇺🇸' },
+    { id: 'RI', name: 'Rhode Island', flag: '🇺🇸' },
+    { id: 'SC', name: 'South Carolina', flag: '🇺🇸' },
+    { id: 'SD', name: 'South Dakota', flag: '🇺🇸' },
+    { id: 'TN', name: 'Tennessee', flag: '🇺🇸' },
+    { id: 'TX', name: 'Texas', flag: '🇺🇸' },
+    { id: 'UT', name: 'Utah', flag: '🇺🇸' },
+    { id: 'VT', name: 'Vermont', flag: '🇺🇸' },
+    { id: 'VA', name: 'Virginia', flag: '🇺🇸' },
+    { id: 'WA', name: 'Washington', flag: '🇺🇸' },
+    { id: 'WV', name: 'West Virginia', flag: '🇺🇸' },
+    { id: 'WI', name: 'Wisconsin', flag: '🇺🇸' },
+    { id: 'WY', name: 'Wyoming', flag: '🇺🇸' }
+  ],
+  'GB': [
+    { id: 'ENG', name: 'England', flag: '🇬🇧' },
+    { id: 'SCT', name: 'Scotland', flag: '🇬🇧' },
+    { id: 'WLS', name: 'Wales', flag: '🇬🇧' },
+    { id: 'NIR', name: 'Northern Ireland', flag: '🇬🇧' }
+  ],
+  'CA': [
+    { id: 'AB', name: 'Alberta', flag: '🇨🇦' },
+    { id: 'BC', name: 'British Columbia', flag: '🇨🇦' },
+    { id: 'MB', name: 'Manitoba', flag: '🇨🇦' },
+    { id: 'NB', name: 'New Brunswick', flag: '🇨🇦' },
+    { id: 'NL', name: 'Newfoundland and Labrador', flag: '🇨🇦' },
+    { id: 'NS', name: 'Nova Scotia', flag: '🇨🇦' },
+    { id: 'ON', name: 'Ontario', flag: '🇨🇦' },
+    { id: 'PE', name: 'Prince Edward Island', flag: '🇨🇦' },
+    { id: 'QC', name: 'Quebec', flag: '🇨🇦' },
+    { id: 'SK', name: 'Saskatchewan', flag: '🇨🇦' },
+    { id: 'NT', name: 'Northwest Territories', flag: '🇨🇦' },
+    { id: 'NU', name: 'Nunavut', flag: '🇨🇦' },
+    { id: 'YT', name: 'Yukon', flag: '🇨🇦' }
+  ],
+  'AU': [
+    { id: 'NSW', name: 'New South Wales', flag: '🇦🇺' },
+    { id: 'VIC', name: 'Victoria', flag: '🇦🇺' },
+    { id: 'QLD', name: 'Queensland', flag: '🇦🇺' },
+    { id: 'WA', name: 'Western Australia', flag: '🇦🇺' },
+    { id: 'SA', name: 'South Australia', flag: '🇦🇺' },
+    { id: 'TAS', name: 'Tasmania', flag: '🇦🇺' },
+    { id: 'ACT', name: 'Australian Capital Territory', flag: '🇦🇺' },
+    { id: 'NT', name: 'Northern Territory', flag: '🇦🇺' }
+  ],
+  'NZ': [
+    { id: 'NTL', name: 'Northland', flag: '🇳🇿' },
+    { id: 'AUK', name: 'Auckland', flag: '🇳🇿' },
+    { id: 'WKO', name: 'Waikato', flag: '🇳🇿' },
+    { id: 'BOP', name: 'Bay of Plenty', flag: '🇳🇿' },
+    { id: 'GIS', name: 'Gisborne', flag: '🇳🇿' },
+    { id: 'HKB', name: "Hawke's Bay", flag: '🇳🇿' },
+    { id: 'TKI', name: 'Taranaki', flag: '🇳🇿' },
+    { id: 'MWT', name: 'Manawatū-Whanganui', flag: '🇳🇿' },
+    { id: 'WGN', name: 'Wellington', flag: '🇳🇿' },
+    { id: 'TAS', name: 'Tasman', flag: '🇳🇿' },
+    { id: 'NN', name: 'Nelson', flag: '🇳🇿' },
+    { id: 'MBH', name: 'Marlborough', flag: '🇳🇿' },
+    { id: 'WTC', name: 'West Coast', flag: '🇳🇿' },
+    { id: 'CAN', name: 'Canterbury', flag: '🇳🇿' },
+    { id: 'OTA', name: 'Otago', flag: '🇳🇿' },
+    { id: 'STL', name: 'Southland', flag: '🇳🇿' }
+  ],
+  'BR': [
+    { id: 'AC', name: 'Acre', flag: '🇧🇷' },
+    { id: 'AL', name: 'Alagoas', flag: '🇧🇷' },
+    { id: 'AP', name: 'Amapá', flag: '🇧🇷' },
+    { id: 'AM', name: 'Amazonas', flag: '🇧🇷' },
+    { id: 'BA', name: 'Bahia', flag: '🇧🇷' },
+    { id: 'CE', name: 'Ceará', flag: '🇧🇷' },
+    { id: 'DF', name: 'Distrito Federal', flag: '🇧🇷' },
+    { id: 'ES', name: 'Espírito Santo', flag: '🇧🇷' },
+    { id: 'GO', name: 'Goiás', flag: '🇧🇷' },
+    { id: 'MA', name: 'Maranhão', flag: '🇧🇷' },
+    { id: 'MT', name: 'Mato Grosso', flag: '🇧🇷' },
+    { id: 'MS', name: 'Mato Grosso do Sul', flag: '🇧🇷' },
+    { id: 'MG', name: 'Minas Gerais', flag: '🇧🇷' },
+    { id: 'PA', name: 'Pará', flag: '🇧🇷' },
+    { id: 'PB', name: 'Paraíba', flag: '🇧🇷' },
+    { id: 'PR', name: 'Paraná', flag: '🇧🇷' },
+    { id: 'PE', name: 'Pernambuco', flag: '🇧🇷' },
+    { id: 'PI', name: 'Piauí', flag: '🇧🇷' },
+    { id: 'RJ', name: 'Rio de Janeiro', flag: '🇧🇷' },
+    { id: 'RN', name: 'Rio Grande do Norte', flag: '🇧🇷' },
+    { id: 'RS', name: 'Rio Grande do Sul', flag: '🇧🇷' },
+    { id: 'RO', name: 'Rondônia', flag: '🇧🇷' },
+    { id: 'RR', name: 'Roraima', flag: '🇧🇷' },
+    { id: 'SC', name: 'Santa Catarina', flag: '🇧🇷' },
+    { id: 'SP', name: 'São Paulo', flag: '🇧🇷' },
+    { id: 'SE', name: 'Sergipe', flag: '🇧🇷' },
+    { id: 'TO', name: 'Tocantins', flag: '🇧🇷' }
+  ]
+};
 
 const getDeviceLanguage = () => {
   try {
@@ -111,7 +259,7 @@ const getDeviceRegion = () => {
 
 export default function OnboardingScreen({ navigation, route }: Props) {
   const [step, setStep] = useState(1);
-  const totalSteps = 14;
+  const totalSteps = 15;
 
   // Form State
   const [language, setLanguage] = useState<string>(getDeviceLanguage());
@@ -125,9 +273,10 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   const [appliances, setAppliances] = useState<string[]>(['stove', 'oven']); // Pre-select standard ones
   const [moods, setMoods] = useState<string[]>([]);
   const [country, setCountry] = useState<string>(getDeviceRegion());
+  const [specificCountry, setSpecificCountry] = useState<string | null>(null);
   const [stores, setStores] = useState<any[]>([]);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
-  const [preferredStoreId, setPreferredStoreId] = useState<string | null>(null);
+  const [preferredStoreIds, setPreferredStoreIds] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   
   const [weeklyBudget, setWeeklyBudget] = useState<number>(73);
@@ -142,7 +291,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         const data = await ApiClient.get('/stores');
         if (data && data.length > 0) {
           setStores(data);
-          setPreferredStoreId(data[0].id);
+          setPreferredStoreIds([data[0].id]);
           return;
         }
       } catch (error) {
@@ -187,11 +336,18 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         return;
       }
     }
-    if (step === 13 && !preferredStoreId) {
-      Alert.alert('Selection Required', 'Please select a preferred grocery store to continue.');
+    if (step === 13) {
+      if (!country) return;
+      if (!SUB_COUNTRIES[country]) {
+        setStep(15);
+        return;
+      }
+    }
+    if (step === 14 && !specificCountry) {
       return;
     }
-    if (step === 14 && !country) {
+    if (step === 15 && preferredStoreIds.length === 0) {
+      Alert.alert('Selection Required', 'Please select at least one preferred grocery store to continue.');
       return;
     }
     if (step < totalSteps) {
@@ -202,6 +358,10 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   };
 
   const handleBack = () => {
+    if (step === 15 && !SUB_COUNTRIES[country]) {
+      setStep(13);
+      return;
+    }
     if (step > 1) {
       setStep(step - 1);
     }
@@ -256,10 +416,10 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         planned_days: plannedDays,
         appliances,
         moods,
-        country,
+        country: specificCountry || country,
         household_size: parseInt(householdSize, 10),
         weekly_budget: weeklyBudget,
-        preferred_store_id: preferredStoreId,
+        preferred_store_ids: preferredStoreIds,
         diet_constraints: dietConstraints,
         currency: 'USD',
         flexible_preferences: {}
@@ -282,7 +442,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   const renderStepIndicator = () => (
     <View style={styles.indicatorContainer}>
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((i) => (
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
         <View key={i} style={[styles.dot, step === i && styles.dotActive]} />
       ))}
     </View>
@@ -548,7 +708,31 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     </View>
   );
 
-  const renderStep13 = () => (
+  const renderStep14 = () => {
+    const subCountries = SUB_COUNTRIES[country] || [];
+    return (
+      <View style={styles.stepContainer}>
+        <Text style={styles.title}>Where exactly in {COUNTRIES.find(c => c.id === country)?.name} are you from?</Text>
+        <Text style={styles.subtitle}>This helps us tailor recipes with local ingredients.</Text>
+        
+        <ScrollView contentContainerStyle={styles.storeList} showsVerticalScrollIndicator={false}>
+          {subCountries.map(c => (
+            <TouchableOpacity 
+              key={c.id} 
+              style={[styles.storeOption, specificCountry === c.id && styles.storeOptionSelected]}
+              onPress={() => setSpecificCountry(c.id)}
+            >
+              <Text style={[styles.storeText, specificCountry === c.id && styles.storeTextSelected]}>
+                {c.flag}  {c.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderStep15 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.title}>Where do you usually buy your groceries?</Text>
       <Text style={styles.subtitle}>We'll use this to get accurate pricing for your meal plans.</Text>
@@ -557,39 +741,46 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         <ActivityIndicator size="large" style={{ marginTop: 40 }} />
       ) : (
         <View style={styles.storeGrid}>
-          {stores.map(store => (
-            <TouchableOpacity 
-              key={store.id} 
-              style={styles.storeCircleContainer}
-              onPress={() => setPreferredStoreId(store.id)}
-            >
-              <View style={[styles.storeCircle, preferredStoreId === store.id && styles.storeCircleSelected]}>
-                {store.logo_url && !imageErrors[store.id] ? (
-                  <Image 
-                    source={{ uri: store.logo_url }} 
-                    style={styles.storeLogoImage} 
-                    onError={() => setImageErrors(prev => ({ ...prev, [store.id]: true }))}
-                  />
-                ) : (
-                  <Text style={styles.storeLogoText}>{store.name.charAt(0)}</Text>
-                )}
-              </View>
-              <Text style={[styles.storeLabel, preferredStoreId === store.id && styles.storeLabelSelected]}>
-                {store.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {stores.map(store => {
+            const isSelected = preferredStoreIds.includes(store.id);
+            return (
+              <TouchableOpacity 
+                key={store.id} 
+                style={styles.storeCircleContainer}
+                onPress={() => {
+                  setPreferredStoreIds(prev => 
+                    prev.includes(store.id) ? prev.filter(id => id !== store.id) : [...prev, store.id]
+                  );
+                }}
+              >
+                <View style={[styles.storeCircle, isSelected && styles.storeCircleSelected]}>
+                  {store.logo_url && !imageErrors[store.id] ? (
+                    <Image 
+                      source={{ uri: store.logo_url }} 
+                      style={styles.storeLogoImage} 
+                      onError={() => setImageErrors(prev => ({ ...prev, [store.id]: true }))}
+                    />
+                  ) : (
+                    <Text style={styles.storeLogoText}>{store.name.charAt(0)}</Text>
+                  )}
+                </View>
+                <Text style={[styles.storeLabel, isSelected && styles.storeLabelSelected]}>
+                  {store.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
     </View>
   );
 
-  const renderStep14 = () => (
+  const renderStep13 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.title}>Where are you from?</Text>
       <Text style={styles.subtitle}>This helps us tailor recipes with local ingredients and correct units.</Text>
       
-      <View style={styles.storeList}>
+      <ScrollView contentContainerStyle={styles.storeList} showsVerticalScrollIndicator={false}>
         {COUNTRIES.map(c => (
           <TouchableOpacity 
             key={c.id} 
@@ -601,7 +792,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
@@ -632,6 +823,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         {step === 12 && renderStep12()}
         {step === 13 && renderStep13()}
         {step === 14 && renderStep14()}
+        {step === 15 && renderStep15()}
       </View>
 
       <View style={styles.footer}>

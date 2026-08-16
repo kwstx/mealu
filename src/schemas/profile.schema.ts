@@ -15,7 +15,7 @@ export const ProfileSchema = z.object({
   household_size: z.number().int().min(1, 'Household size must be at least 1'),
   weekly_budget: z.number().min(0.01, 'Budget must be positive'),
   currency: z.string().length(3).optional().default('USD'),
-  preferred_store_id: z.string().uuid().optional().nullable(),
+  preferred_store_ids: z.array(z.string().uuid()).optional().default([]),
   diet_constraints: z.array(z.enum(dietVocabulary)).optional().default([]),
   flexible_preferences: z.record(z.string(), z.any()).optional().default({}),
 });

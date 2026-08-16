@@ -26,7 +26,7 @@ export default function ProfileForm({ initialData, onSubmitSuccess, buttonLabel 
   
   const [householdSize, setHouseholdSize] = useState(initialData?.household_size?.toString() || '1');
   const [weeklyBudget, setWeeklyBudget] = useState(initialData?.weekly_budget?.toString() || '0.00');
-  const [preferredStoreId, setPreferredStoreId] = useState(initialData?.preferred_store_id || null);
+  const [preferredStoreIds, setPreferredStoreIds] = useState<string[]>(initialData?.preferred_store_ids || []);
   const [dietConstraints, setDietConstraints] = useState<string[]>(initialData?.diet_constraints || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,8 +35,8 @@ export default function ProfileForm({ initialData, onSubmitSuccess, buttonLabel 
       try {
         const data = await ApiClient.get('/stores');
         setStores(data);
-        if (!preferredStoreId && data.length > 0) {
-          setPreferredStoreId(data[0].id);
+        if (preferredStoreIds.length === 0 && data.length > 0) {
+          setPreferredStoreIds([data[0].id]);
         }
       } catch (error) {
         console.error('Failed to fetch stores:', error);
@@ -77,7 +77,7 @@ export default function ProfileForm({ initialData, onSubmitSuccess, buttonLabel 
       const payload = {
         household_size: size,
         weekly_budget: budget,
-        preferred_store_id: preferredStoreId,
+        preferred_store_ids: preferredStoreIds,
         diet_constraints: dietConstraints,
         currency: 'USD',
         flexible_preferences: {}
@@ -133,17 +133,24 @@ export default function ProfileForm({ initialData, onSubmitSuccess, buttonLabel 
           <ActivityIndicator />
         ) : (
           <View style={styles.storeList}>
-            {stores.map(store => (
-              <TouchableOpacity 
-                key={store.id} 
-                style={[styles.storeOption, preferredStoreId === store.id && styles.storeOptionSelected]}
-                onPress={() => setPreferredStoreId(store.id)}
-              >
-                <Text style={[styles.storeText, preferredStoreId === store.id && styles.storeTextSelected]}>
-                  {store.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {stores.map(store => {
+              const isSelected = preferredStoreIds.includes(store.id);
+              return (
+                <TouchableOpacity 
+                  key={store.id} 
+                  style={[styles.storeOption, isSelected && styles.storeOptionSelected]}
+                  onPress={() => {
+                    setPreferredStoreIds(prev => 
+                      prev.includes(store.id) ? prev.filter(id => id !== store.id) : [...prev, store.id]
+                    );
+                  }}
+                >
+                  <Text style={[styles.storeText, isSelected && styles.storeTextSelected]}>
+                    {store.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </View>

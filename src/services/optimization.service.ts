@@ -23,7 +23,7 @@ export class OptimizationService {
   static async generateMealPlan(userId: string, options: OptimizationOptions) {
     // 1. Fetch User Settings
     const userResult = await query(
-      'SELECT household_size, weekly_budget, preferred_store_id FROM users WHERE id = $1',
+      'SELECT household_size, weekly_budget, preferred_store_ids FROM users WHERE id = $1',
       [userId]
     );
     if (userResult.rows.length === 0) throw new Error('User not found');
@@ -31,7 +31,8 @@ export class OptimizationService {
 
     const budget = options.budgetOverride ?? parseFloat(user.weekly_budget);
     const householdSize = user.household_size;
-    const storeId = user.preferred_store_id;
+    const storeIds = user.preferred_store_ids || [];
+    const storeId = storeIds.length > 0 ? storeIds[0] : null;
 
     if (!storeId) throw new Error('User must have a preferred store to calculate prices');
 

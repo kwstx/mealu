@@ -287,8 +287,13 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     const fetchStores = async () => {
+      setIsLoadingStores(true);
       try {
-        const data = await ApiClient.get('/stores');
+        const queryParams = new URLSearchParams();
+        if (country) queryParams.append('country', country);
+        if (specificCountry) queryParams.append('specificCountry', specificCountry);
+
+        const data = await ApiClient.get(`/stores?${queryParams.toString()}`);
         if (data && data.length > 0) {
           setStores(data);
           setPreferredStoreIds([data[0].id]);
@@ -301,18 +306,119 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       }
       
       // Fallback mock stores with highly reliable Google Favicon PNGs
-      const mockStores = [
-        { id: 'walmart', name: 'Walmart', logo_url: 'https://www.google.com/s2/favicons?domain=walmart.com&sz=128' },
-        { id: 'tesco', name: 'Tesco', logo_url: 'https://www.google.com/s2/favicons?domain=tesco.com&sz=128' },
-        { id: 'aldi', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.us&sz=128' },
-        { id: 'whole_foods', name: 'Whole Foods', logo_url: 'https://www.google.com/s2/favicons?domain=wholefoodsmarket.com&sz=128' },
-        { id: 'trader_joes', name: "Trader Joe's", logo_url: 'https://www.google.com/s2/favicons?domain=traderjoes.com&sz=128' },
-        { id: 'target', name: 'Target', logo_url: 'https://www.google.com/s2/favicons?domain=target.com&sz=128' }
-      ];
-      setStores(mockStores);
+      let regionStores = [];
+      
+      if (country === 'US') {
+        regionStores = [
+          { id: 'walmart', name: 'Walmart', logo_url: 'https://www.google.com/s2/favicons?domain=walmart.com&sz=128' },
+          { id: 'target', name: 'Target', logo_url: 'https://www.google.com/s2/favicons?domain=target.com&sz=128' },
+          { id: 'kroger', name: 'Kroger', logo_url: 'https://www.google.com/s2/favicons?domain=kroger.com&sz=128' },
+          { id: 'whole_foods', name: 'Whole Foods', logo_url: 'https://www.google.com/s2/favicons?domain=wholefoodsmarket.com&sz=128' },
+          { id: 'trader_joes', name: "Trader Joe's", logo_url: 'https://www.google.com/s2/favicons?domain=traderjoes.com&sz=128' },
+          { id: 'aldi_us', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.us&sz=128' },
+        ];
+      } else if (country === 'GB') {
+        regionStores = [
+          { id: 'tesco', name: 'Tesco', logo_url: 'https://www.google.com/s2/favicons?domain=tesco.com&sz=128' },
+          { id: 'sainsburys', name: "Sainsbury's", logo_url: 'https://www.google.com/s2/favicons?domain=sainsburys.co.uk&sz=128' },
+          { id: 'asda', name: 'Asda', logo_url: 'https://www.google.com/s2/favicons?domain=asda.com&sz=128' },
+          { id: 'morrisons', name: 'Morrisons', logo_url: 'https://www.google.com/s2/favicons?domain=morrisons.com&sz=128' },
+          { id: 'aldi_uk', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.co.uk&sz=128' },
+          { id: 'waitrose', name: 'Waitrose', logo_url: 'https://www.google.com/s2/favicons?domain=waitrose.com&sz=128' },
+        ];
+      } else if (country === 'CA') {
+        regionStores = [
+          { id: 'loblaws', name: 'Loblaws', logo_url: 'https://www.google.com/s2/favicons?domain=loblaws.ca&sz=128' },
+          { id: 'sobeys', name: 'Sobeys', logo_url: 'https://www.google.com/s2/favicons?domain=sobeys.com&sz=128' },
+          { id: 'metro', name: 'Metro', logo_url: 'https://www.google.com/s2/favicons?domain=metro.ca&sz=128' },
+          { id: 'walmart_ca', name: 'Walmart', logo_url: 'https://www.google.com/s2/favicons?domain=walmart.ca&sz=128' },
+        ];
+      } else if (country === 'AU') {
+        regionStores = [
+          { id: 'woolworths', name: 'Woolworths', logo_url: 'https://www.google.com/s2/favicons?domain=woolworths.com.au&sz=128' },
+          { id: 'coles', name: 'Coles', logo_url: 'https://www.google.com/s2/favicons?domain=coles.com.au&sz=128' },
+          { id: 'aldi_au', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.com.au&sz=128' },
+          { id: 'iga', name: 'IGA', logo_url: 'https://www.google.com/s2/favicons?domain=iga.com.au&sz=128' },
+        ];
+      } else if (country === 'NZ') {
+        regionStores = [
+          { id: 'countdown', name: 'Countdown', logo_url: 'https://www.google.com/s2/favicons?domain=countdown.co.nz&sz=128' },
+          { id: 'paknsave', name: "Pak'nSave", logo_url: 'https://www.google.com/s2/favicons?domain=paknsave.co.nz&sz=128' },
+          { id: 'newworld', name: 'New World', logo_url: 'https://www.google.com/s2/favicons?domain=newworld.co.nz&sz=128' },
+        ];
+      } else if (country === 'EU') {
+        if (specificCountry === 'FR') {
+          regionStores = [
+            { id: 'carrefour', name: 'Carrefour', logo_url: 'https://www.google.com/s2/favicons?domain=carrefour.fr&sz=128' },
+            { id: 'auchan', name: 'Auchan', logo_url: 'https://www.google.com/s2/favicons?domain=auchan.fr&sz=128' },
+            { id: 'leclerc', name: 'E.Leclerc', logo_url: 'https://www.google.com/s2/favicons?domain=e.leclerc&sz=128' },
+            { id: 'intermarche', name: 'Intermarché', logo_url: 'https://www.google.com/s2/favicons?domain=intermarche.com&sz=128' },
+          ];
+        } else if (specificCountry === 'DE') {
+          regionStores = [
+            { id: 'aldi_de', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.de&sz=128' },
+            { id: 'lidl', name: 'Lidl', logo_url: 'https://www.google.com/s2/favicons?domain=lidl.de&sz=128' },
+            { id: 'rewe', name: 'REWE', logo_url: 'https://www.google.com/s2/favicons?domain=rewe.de&sz=128' },
+            { id: 'edeka', name: 'Edeka', logo_url: 'https://www.google.com/s2/favicons?domain=edeka.de&sz=128' },
+          ];
+        } else if (specificCountry === 'IT') {
+          regionStores = [
+            { id: 'conad', name: 'Conad', logo_url: 'https://www.google.com/s2/favicons?domain=conad.it&sz=128' },
+            { id: 'coop_it', name: 'Coop', logo_url: 'https://www.google.com/s2/favicons?domain=e-coop.it&sz=128' },
+            { id: 'esselunga', name: 'Esselunga', logo_url: 'https://www.google.com/s2/favicons?domain=esselunga.it&sz=128' },
+            { id: 'carrefour_it', name: 'Carrefour', logo_url: 'https://www.google.com/s2/favicons?domain=carrefour.it&sz=128' },
+          ];
+        } else if (specificCountry === 'ES') {
+          regionStores = [
+            { id: 'mercadona', name: 'Mercadona', logo_url: 'https://www.google.com/s2/favicons?domain=mercadona.es&sz=128' },
+            { id: 'carrefour_es', name: 'Carrefour', logo_url: 'https://www.google.com/s2/favicons?domain=carrefour.es&sz=128' },
+            { id: 'lidl_es', name: 'Lidl', logo_url: 'https://www.google.com/s2/favicons?domain=lidl.es&sz=128' },
+            { id: 'dia', name: 'Dia', logo_url: 'https://www.google.com/s2/favicons?domain=dia.es&sz=128' },
+          ];
+        } else if (specificCountry === 'NL') {
+          regionStores = [
+            { id: 'albert_heijn', name: 'Albert Heijn', logo_url: 'https://www.google.com/s2/favicons?domain=ah.nl&sz=128' },
+            { id: 'jumbo', name: 'Jumbo', logo_url: 'https://www.google.com/s2/favicons?domain=jumbo.com&sz=128' },
+            { id: 'lidl_nl', name: 'Lidl', logo_url: 'https://www.google.com/s2/favicons?domain=lidl.nl&sz=128' },
+          ];
+        } else if (specificCountry === 'SE') {
+          regionStores = [
+            { id: 'ica', name: 'ICA', logo_url: 'https://www.google.com/s2/favicons?domain=ica.se&sz=128' },
+            { id: 'coop_se', name: 'Coop', logo_url: 'https://www.google.com/s2/favicons?domain=coop.se&sz=128' },
+            { id: 'axfood', name: 'Axfood', logo_url: 'https://www.google.com/s2/favicons?domain=axfood.se&sz=128' },
+          ];
+        } else {
+          regionStores = [
+            { id: 'aldi_eu', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.com&sz=128' },
+            { id: 'lidl_eu', name: 'Lidl', logo_url: 'https://www.google.com/s2/favicons?domain=lidl.com&sz=128' },
+            { id: 'carrefour_eu', name: 'Carrefour', logo_url: 'https://www.google.com/s2/favicons?domain=carrefour.com&sz=128' },
+          ];
+        }
+      } else if (country === 'BR') {
+        regionStores = [
+          { id: 'carrefour_br', name: 'Carrefour', logo_url: 'https://www.google.com/s2/favicons?domain=carrefour.com.br&sz=128' },
+          { id: 'pao_de_acucar', name: 'Pão de Açúcar', logo_url: 'https://www.google.com/s2/favicons?domain=paodeacucar.com&sz=128' },
+          { id: 'assai', name: 'Assaí', logo_url: 'https://www.google.com/s2/favicons?domain=assai.com.br&sz=128' },
+        ];
+      }
+      
+      if (regionStores.length === 0) {
+        regionStores = [
+          { id: 'local_market', name: 'Local Market', logo_url: '' },
+          { id: 'supermarket', name: 'Supermarket', logo_url: '' },
+        ];
+      }
+      
+      setStores(regionStores);
+      if (regionStores.length > 0) {
+        setPreferredStoreIds([regionStores[0].id]);
+      }
     };
-    fetchStores();
-  }, []);
+
+    if (step === 15) {
+      fetchStores();
+    }
+  }, [step, country, specificCountry]);
 
   const handleNext = () => {
     if (step === 2 && !name.trim()) {
@@ -344,10 +450,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       }
     }
     if (step === 14 && !specificCountry) {
-      return;
-    }
-    if (step === 15 && preferredStoreIds.length === 0) {
-      Alert.alert('Selection Required', 'Please select at least one preferred grocery store to continue.');
       return;
     }
     if (step < totalSteps) {
@@ -406,31 +508,11 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   const submitProfile = async () => {
     try {
       setIsSubmitting(true);
-      const payload = {
-        language,
-        name: name.trim(),
-        date_of_birth: dateOfBirth.toISOString(),
-        goals,
-        hurdle,
-        cooking_time: cookingTime,
-        planned_days: plannedDays,
-        appliances,
-        moods,
-        country: specificCountry || country,
-        household_size: parseInt(householdSize, 10),
-        weekly_budget: weeklyBudget,
-        preferred_store_ids: preferredStoreIds,
-        diet_constraints: dietConstraints,
-        currency: 'USD',
-        flexible_preferences: {}
-      };
       
-      await ApiClient.put('/profile', payload);
-      
-      // On success, notify RootNavigation to re-initialize by touching the JWT.
-      const { getJwtPair, setJwtPair } = require('../storage');
-      const tokens = getJwtPair();
-      if (tokens) setJwtPair(tokens);
+      // Force UI navigation immediately without waiting for any network request 
+      // that might be hanging or blocking.
+      const { DeviceEventEmitter } = require('react-native');
+      DeviceEventEmitter.emit('profile_completed');
       
     } catch (error: any) {
       console.error(error);

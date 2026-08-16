@@ -18,7 +18,7 @@ CREATE TABLE users (
     household_size INTEGER NOT NULL DEFAULT 1 CHECK (household_size > 0),
     weekly_budget DECIMAL(10, 2) NOT NULL DEFAULT 0.00 CHECK (weekly_budget >= 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-    preferred_store_id UUID REFERENCES stores(id) ON DELETE SET NULL,
+    preferred_store_ids UUID[] DEFAULT '{}',
     diet_constraints TEXT[] DEFAULT '{}', -- Array of tags: e.g., '{"vegan", "gluten-free"}'
     flexible_preferences JSONB DEFAULT '{}'::jsonb, -- For flexible JSONB preference data
     preference_bitmap BIGINT DEFAULT 0, -- Denormalized bitmap for fast optimization filtering

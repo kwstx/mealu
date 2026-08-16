@@ -25,7 +25,7 @@ export class ProfileService {
 
   static async getProfile(userId: string) {
     const result = await query(
-      `SELECT id, email, household_size, weekly_budget, currency, preferred_store_id, diet_constraints, flexible_preferences, preference_bitmap, created_at, updated_at
+      `SELECT id, email, household_size, weekly_budget, currency, preferred_store_ids, diet_constraints, flexible_preferences, preference_bitmap, created_at, updated_at
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -40,18 +40,18 @@ export class ProfileService {
        SET household_size = $1,
            weekly_budget = $2,
            currency = $3,
-           preferred_store_id = $4,
+           preferred_store_ids = $4,
            diet_constraints = $5,
            flexible_preferences = $6,
            preference_bitmap = $7,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $8
-       RETURNING id, email, household_size, weekly_budget, currency, preferred_store_id, diet_constraints, flexible_preferences, preference_bitmap`,
+       RETURNING id, email, household_size, weekly_budget, currency, preferred_store_ids, diet_constraints, flexible_preferences, preference_bitmap`,
       [
         data.household_size,
         data.weekly_budget,
         data.currency,
-        data.preferred_store_id,
+        data.preferred_store_ids,
         data.diet_constraints,
         data.flexible_preferences,
         bitmap.toString(), // Ensure BIGINT is passed as string to pg

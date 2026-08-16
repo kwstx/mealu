@@ -22,7 +22,7 @@ export class PlanService {
       FROM meal_plan_shopping_list msl
       JOIN ingredients i ON i.id = msl.ingredient_id
       LEFT JOIN users u ON u.id = $2
-      LEFT JOIN store_products sp ON sp.ingredient_id = i.id AND sp.store_id = u.preferred_store_id
+      LEFT JOIN store_products sp ON sp.ingredient_id = i.id AND sp.store_id = ANY(u.preferred_store_ids)
       LEFT JOIN user_owned_ingredients uoi ON uoi.ingredient_id = i.id AND uoi.user_id = $2
       WHERE msl.meal_plan_id = $1
     `, [planId, userId]);

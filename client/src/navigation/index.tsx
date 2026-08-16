@@ -66,7 +66,7 @@ export default function RootNavigation() {
           // Fetch profile to check if onboarding is needed
           try {
             const profile = await ApiClient.get('/profile');
-            if (profile && profile.preferred_store_id && profile.weekly_budget > 0) {
+            if (profile && profile.preferred_store_ids && profile.preferred_store_ids.length > 0 && profile.weekly_budget > 0) {
               setIsProfileComplete(true);
             } else {
               setIsProfileComplete(false);
@@ -85,6 +85,11 @@ export default function RootNavigation() {
     };
 
     initializeAuth();
+
+    const { DeviceEventEmitter } = require('react-native');
+    const profileSub = DeviceEventEmitter.addListener('profile_completed', () => {
+      setIsProfileComplete(true);
+    });
 
     const listener = storage.addOnValueChangedListener((key) => {
       if (key === STORAGE_KEYS.JWT_PAIR) {
@@ -105,6 +110,7 @@ export default function RootNavigation() {
     });
     return () => {
       listener.remove();
+      profileSub.remove();
     };
   }, []);
 

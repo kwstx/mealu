@@ -16,6 +16,7 @@ export type AuthStackParamList = {
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  Onboarding: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   MealDetail: { meal: Meal };
 };

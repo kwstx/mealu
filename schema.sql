@@ -14,6 +14,7 @@ CREATE TABLE stores (
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255),
     household_size INTEGER NOT NULL DEFAULT 1 CHECK (household_size > 0),
     weekly_budget DECIMAL(10, 2) NOT NULL DEFAULT 0.00 CHECK (weekly_budget >= 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',

@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/kwstx/mealu#readme",
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
     "bullmq": "^6.1.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

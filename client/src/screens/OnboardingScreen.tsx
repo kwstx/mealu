@@ -1,23 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Image } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { AppText as Text } from '../components/AppText';
 import { ApiClient } from '../api/client';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../components/CustomDatePicker';
+import { CustomSlider } from '../components/CustomSlider';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const DIET_VOCABULARY = [
-  'vegan',
-  'vegetarian',
-  'gluten-free',
-  'dairy-free',
-  'nut-free',
-  'paleo',
-  'keto',
-  'pescatarian',
+  'Vegetarian',
+  'Vegan',
+  'Gluten-Free',
+  'Dairy-Free',
+  'Peanut Allergy',
+  'Nut-Free',
+  'Keto',
+  'Pescatarian',
+];
+
+const MOODS_VOCABULARY = [
+  'Quick Meals',
+  'High Protein',
+  'Gut Friendly',
+  'Low Calorie',
+  'Comfort Food',
+  'Heart Healthy',
+  'Low Carb',
+];
+
+const GOALS_VOCABULARY = [
+  'Save money',
+  'Eat healthier',
+  'Save time cooking',
+  'Reduce food waste',
+  'Learn to cook',
+  'Lose/Gain weight',
+];
+
+const HURDLES = [
+  "I don't have enough time",
+  "Groceries are too expensive",
+  "I lack inspiration",
+  "Cooking for picky eaters",
+];
+
+const COOKING_TIMES = [
+  'Under 15 mins (Quick & Easy)',
+  '~30 mins (Standard)',
+  '45+ mins (I love to cook!)'
+];
+
+const DAYS_OF_WEEK = [
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+];
+
+const APPLIANCES = [
+  { id: 'stove', name: 'Stove', emoji: '🍳' },
+  { id: 'oven', name: 'Oven', emoji: '🥘' },
+  { id: 'microwave', name: 'Microwave', emoji: '♨️' },
+  { id: 'air_fryer', name: 'Air Fryer', emoji: '🌪️' },
+  { id: 'blender', name: 'Blender', emoji: '🥤' },
+  { id: 'slow_cooker', name: 'Slow Cooker', emoji: '🍲' },
+  { id: 'grill', name: 'Grill', emoji: '🍖' },
+];
+
+const HOUSEHOLD_OPTIONS = [
+  { label: 'Just me', value: '1' },
+  { label: 'Me + 1', value: '2' },
+  { label: 'A family', value: '4' },
 ];
 
 const LANGUAGES = [
@@ -58,19 +111,26 @@ const getDeviceRegion = () => {
 
 export default function OnboardingScreen({ navigation, route }: Props) {
   const [step, setStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 14;
 
   // Form State
   const [language, setLanguage] = useState<string>(getDeviceLanguage());
   const [name, setName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(2000, 5, 16)); // Default to June 16, 2020 or similar, but 2000 is safer for "age"
+  const [goals, setGoals] = useState<string[]>([]);
+  const [hurdle, setHurdle] = useState<string | null>(null);
+  const [householdSize, setHouseholdSize] = useState('1');
+  const [cookingTime, setCookingTime] = useState<string | null>(null);
+  const [plannedDays, setPlannedDays] = useState<string[]>([]);
+  const [appliances, setAppliances] = useState<string[]>(['stove', 'oven']); // Pre-select standard ones
+  const [moods, setMoods] = useState<string[]>([]);
   const [country, setCountry] = useState<string>(getDeviceRegion());
   const [stores, setStores] = useState<any[]>([]);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
   const [preferredStoreId, setPreferredStoreId] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   
-  const [householdSize, setHouseholdSize] = useState('1');
-  const [weeklyBudget, setWeeklyBudget] = useState('');
+  const [weeklyBudget, setWeeklyBudget] = useState<number>(73);
   
   const [dietConstraints, setDietConstraints] = useState<string[]>([]);
   
@@ -80,15 +140,27 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     const fetchStores = async () => {
       try {
         const data = await ApiClient.get('/stores');
-        setStores(data);
-        if (data.length > 0) {
+        if (data && data.length > 0) {
+          setStores(data);
           setPreferredStoreId(data[0].id);
+          return;
         }
       } catch (error) {
-        console.error('Failed to fetch stores:', error);
+        console.warn('Failed to fetch stores, using fallback mock stores.');
       } finally {
         setIsLoadingStores(false);
       }
+      
+      // Fallback mock stores with highly reliable Google Favicon PNGs
+      const mockStores = [
+        { id: 'walmart', name: 'Walmart', logo_url: 'https://www.google.com/s2/favicons?domain=walmart.com&sz=128' },
+        { id: 'tesco', name: 'Tesco', logo_url: 'https://www.google.com/s2/favicons?domain=tesco.com&sz=128' },
+        { id: 'aldi', name: 'Aldi', logo_url: 'https://www.google.com/s2/favicons?domain=aldi.us&sz=128' },
+        { id: 'whole_foods', name: 'Whole Foods', logo_url: 'https://www.google.com/s2/favicons?domain=wholefoodsmarket.com&sz=128' },
+        { id: 'trader_joes', name: "Trader Joe's", logo_url: 'https://www.google.com/s2/favicons?domain=traderjoes.com&sz=128' },
+        { id: 'target', name: 'Target', logo_url: 'https://www.google.com/s2/favicons?domain=target.com&sz=128' }
+      ];
+      setStores(mockStores);
     };
     fetchStores();
   }, []);
@@ -97,19 +169,30 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     if (step === 2 && !name.trim()) {
       return; // disabled visually, but block here just in case
     }
-    if (step === 4 && !country) {
+    if (step === 4 && goals.length === 0) {
+      // Allow moving next even without goals, or require at least one? Let's just proceed.
+    }
+    if (step === 5 && !hurdle) {
       return;
     }
-    if (step === 5 && !preferredStoreId) {
+    if (step === 6 && !householdSize) {
+      return;
+    }
+    if (step === 10 && !appliances) {
+      return;
+    }
+    if (step === 11) {
+      if (weeklyBudget <= 0) {
+        Alert.alert('Validation Error', 'Please select a valid positive weekly budget.');
+        return;
+      }
+    }
+    if (step === 13 && !preferredStoreId) {
       Alert.alert('Selection Required', 'Please select a preferred grocery store to continue.');
       return;
     }
-    if (step === 6) {
-      const budget = parseFloat(weeklyBudget);
-      if (isNaN(budget) || budget <= 0) {
-        Alert.alert('Validation Error', 'Please enter a valid positive weekly budget.');
-        return;
-      }
+    if (step === 14 && !country) {
+      return;
     }
     if (step < totalSteps) {
       setStep(step + 1);
@@ -124,9 +207,33 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     }
   };
 
+  const toggleGoal = (goal: string) => {
+    setGoals(prev => 
+      prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]
+    );
+  };
+
+  const toggleDay = (day: string) => {
+    setPlannedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const toggleAppliance = (appId: string) => {
+    setAppliances(prev => 
+      prev.includes(appId) ? prev.filter(a => a !== appId) : [...prev, appId]
+    );
+  };
+
   const toggleDiet = (diet: string) => {
     setDietConstraints(prev => 
       prev.includes(diet) ? prev.filter(d => d !== diet) : [...prev, diet]
+    );
+  };
+
+  const toggleMood = (mood: string) => {
+    setMoods(prev => 
+      prev.includes(mood) ? prev.filter(m => m !== mood) : [...prev, mood]
     );
   };
 
@@ -143,9 +250,15 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         language,
         name: name.trim(),
         date_of_birth: dateOfBirth.toISOString(),
+        goals,
+        hurdle,
+        cooking_time: cookingTime,
+        planned_days: plannedDays,
+        appliances,
+        moods,
         country,
         household_size: parseInt(householdSize, 10),
-        weekly_budget: parseFloat(weeklyBudget),
+        weekly_budget: weeklyBudget,
         preferred_store_id: preferredStoreId,
         diet_constraints: dietConstraints,
         currency: 'USD',
@@ -169,7 +282,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   const renderStepIndicator = () => (
     <View style={styles.indicatorContainer}>
-      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((i) => (
         <View key={i} style={[styles.dot, step === i && styles.dotActive]} />
       ))}
     </View>
@@ -231,6 +344,248 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
+      <Text style={styles.title}>What are you trying to achieve?</Text>
+      <Text style={styles.subtitle}>Select all the goals that apply to you.</Text>
+      
+      <View style={styles.pillsContainer}>
+        {GOALS_VOCABULARY.map(goal => {
+          const isSelected = goals.includes(goal);
+          return (
+            <TouchableOpacity
+              key={goal}
+              style={[styles.pill, isSelected && styles.pillSelected]}
+              onPress={() => toggleGoal(goal)}
+            >
+              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                {goal}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderStep5 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>What's your biggest hurdle right now?</Text>
+      <Text style={styles.subtitle}>We'll use this to guide your experience.</Text>
+      
+      <View style={styles.storeList}>
+        {HURDLES.map(h => (
+          <TouchableOpacity 
+            key={h} 
+            style={[styles.storeOption, hurdle === h && styles.storeOptionSelected]}
+            onPress={() => setHurdle(h)}
+          >
+            <Text style={[styles.storeText, hurdle === h && styles.storeTextSelected]}>
+              {h}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderStep6 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>how many are you cooking for?</Text>
+      <Text style={styles.subtitle}>we'll scale your plan and budget</Text>
+      
+      <View style={styles.bigStepperContainer}>
+        <View style={styles.bigStepperRow}>
+          <TouchableOpacity onPress={() => handleHouseholdChange(-1)} style={styles.bigStepperBtn}>
+            <Text style={styles.bigStepperBtnText}>-</Text>
+          </TouchableOpacity>
+          <View style={styles.bigStepperValueContainer}>
+            <Text style={styles.bigStepperValue}>{householdSize}</Text>
+          </View>
+          <TouchableOpacity onPress={() => handleHouseholdChange(1)} style={styles.bigStepperBtn}>
+            <Text style={styles.bigStepperBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.bigStepperLabel}>people</Text>
+      </View>
+    </View>
+  );
+
+  const renderStep7 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Are there any dietary preferences or allergies we should know about?</Text>
+      <Text style={styles.subtitle}>Select all that apply.</Text>
+      
+      <View style={styles.pillsContainer}>
+        {DIET_VOCABULARY.map(diet => {
+          const isSelected = dietConstraints.includes(diet);
+          return (
+            <TouchableOpacity
+              key={diet}
+              style={[styles.pill, isSelected && styles.pillSelected]}
+              onPress={() => toggleDiet(diet)}
+            >
+              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                {diet}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderStep8 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>How much time do you realistically want to spend cooking a meal?</Text>
+      <Text style={styles.subtitle}>We'll only suggest recipes that fit your schedule.</Text>
+      
+      <View style={styles.storeList}>
+        {COOKING_TIMES.map(time => (
+          <TouchableOpacity 
+            key={time} 
+            style={[styles.storeOption, cookingTime === time && styles.storeOptionSelected]}
+            onPress={() => setCookingTime(time)}
+          >
+            <Text style={[styles.storeText, cookingTime === time && styles.storeTextSelected]}>
+              {time}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderStep9 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Which days do you want meals planned for?</Text>
+      <Text style={styles.subtitle}>Select the days you typically cook at home.</Text>
+      
+      <View style={styles.pillsContainer}>
+        {DAYS_OF_WEEK.map(day => {
+          const isSelected = plannedDays.includes(day);
+          return (
+            <TouchableOpacity
+              key={day}
+              style={[styles.pill, isSelected && styles.pillSelected]}
+              onPress={() => toggleDay(day)}
+            >
+              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                {day}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderStep10 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>What appliances do you have?</Text>
+      <Text style={styles.subtitle}>We'll only show recipes you can actually make.</Text>
+      
+      <View style={styles.applianceGrid}>
+        {APPLIANCES.map(app => {
+          const isSelected = appliances.includes(app.id);
+          return (
+            <View key={app.id} style={styles.applianceItem}>
+              <TouchableOpacity
+                style={[styles.applianceBox, isSelected && styles.applianceBoxSelected]}
+                onPress={() => toggleAppliance(app.id)}
+              >
+                <Text style={styles.applianceEmoji}>{app.emoji}</Text>
+              </TouchableOpacity>
+              <Text style={[styles.applianceLabel, isSelected && styles.applianceLabelSelected]}>{app.name}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderStep11 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>what's your weekly budget?</Text>
+      <Text style={styles.subtitle}>slide to what you're happy to spend on those days</Text>
+      
+      <View style={styles.budgetContainer}>
+        <Text style={styles.budgetAmount}>€{weeklyBudget}</Text>
+        <Text style={styles.budgetLabel}>this week</Text>
+        
+        <View style={styles.sliderWrapper}>
+          <CustomSlider
+            value={weeklyBudget}
+            min={10}
+            max={174}
+            onChange={setWeeklyBudget}
+            symbol="€"
+          />
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderStep12 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>What are you in the mood for?</Text>
+      <Text style={styles.subtitle}>Select the types of meals you're currently craving.</Text>
+      
+      <View style={styles.pillsContainer}>
+        {MOODS_VOCABULARY.map(mood => {
+          const isSelected = moods.includes(mood);
+          return (
+            <TouchableOpacity
+              key={mood}
+              style={[styles.pill, isSelected && styles.pillSelected]}
+              onPress={() => toggleMood(mood)}
+            >
+              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                {mood}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderStep13 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.title}>Where do you usually buy your groceries?</Text>
+      <Text style={styles.subtitle}>We'll use this to get accurate pricing for your meal plans.</Text>
+      
+      {isLoadingStores ? (
+        <ActivityIndicator size="large" style={{ marginTop: 40 }} />
+      ) : (
+        <View style={styles.storeGrid}>
+          {stores.map(store => (
+            <TouchableOpacity 
+              key={store.id} 
+              style={styles.storeCircleContainer}
+              onPress={() => setPreferredStoreId(store.id)}
+            >
+              <View style={[styles.storeCircle, preferredStoreId === store.id && styles.storeCircleSelected]}>
+                {store.logo_url && !imageErrors[store.id] ? (
+                  <Image 
+                    source={{ uri: store.logo_url }} 
+                    style={styles.storeLogoImage} 
+                    onError={() => setImageErrors(prev => ({ ...prev, [store.id]: true }))}
+                  />
+                ) : (
+                  <Text style={styles.storeLogoText}>{store.name.charAt(0)}</Text>
+                )}
+              </View>
+              <Text style={[styles.storeLabel, preferredStoreId === store.id && styles.storeLabelSelected]}>
+                {store.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderStep14 = () => (
+    <View style={styles.stepContainer}>
       <Text style={styles.title}>Where are you from?</Text>
       <Text style={styles.subtitle}>This helps us tailor recipes with local ingredients and correct units.</Text>
       
@@ -246,91 +601,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
-    </View>
-  );
-
-  const renderStep5 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>Where do you shop?</Text>
-      <Text style={styles.subtitle}>Select your preferred grocery store to get accurate pricing for your meal plans.</Text>
-      
-      {isLoadingStores ? (
-        <ActivityIndicator size="large" style={{ marginTop: 40 }} />
-      ) : (
-        <View style={styles.storeList}>
-          {stores.map(store => (
-            <TouchableOpacity 
-              key={store.id} 
-              style={[styles.storeOption, preferredStoreId === store.id && styles.storeOptionSelected]}
-              onPress={() => setPreferredStoreId(store.id)}
-            >
-              <Text style={[styles.storeText, preferredStoreId === store.id && styles.storeTextSelected]}>
-                {store.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-
-  const renderStep6 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>Household & Budget</Text>
-      <Text style={styles.subtitle}>Help us tailor recipes and portions to your needs.</Text>
-      
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Household Size</Text>
-          <View style={styles.stepper}>
-            <TouchableOpacity onPress={() => handleHouseholdChange(-1)} style={styles.stepperBtn}>
-              <Text style={styles.stepperText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.stepperValue}>{householdSize}</Text>
-            <TouchableOpacity onPress={() => handleHouseholdChange(1)} style={styles.stepperBtn}>
-              <Text style={styles.stepperText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Weekly Budget ($)</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            value={weeklyBudget}
-            onChangeText={setWeeklyBudget}
-            placeholder="0.00"
-            autoFocus
-          />
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderStep7 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>Dietary Preferences</Text>
-      <Text style={styles.subtitle}>Select any dietary restrictions we should consider.</Text>
-      
-      <View style={styles.pillsContainer}>
-        {DIET_VOCABULARY.map(diet => {
-          const isSelected = dietConstraints.includes(diet);
-          return (
-            <TouchableOpacity
-              key={diet}
-              style={[styles.pill, isSelected && styles.pillSelected]}
-              onPress={() => toggleDiet(diet)}
-            >
-              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                {diet.charAt(0).toUpperCase() + diet.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
       </View>
     </View>
   );
@@ -355,6 +625,13 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         {step === 5 && renderStep5()}
         {step === 6 && renderStep6()}
         {step === 7 && renderStep7()}
+        {step === 8 && renderStep8()}
+        {step === 9 && renderStep9()}
+        {step === 10 && renderStep10()}
+        {step === 11 && renderStep11()}
+        {step === 12 && renderStep12()}
+        {step === 13 && renderStep13()}
+        {step === 14 && renderStep14()}
       </View>
 
       <View style={styles.footer}>
@@ -471,6 +748,53 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '700',
   },
+  storeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 24,
+    justifyContent: 'center',
+    paddingTop: 16,
+  },
+  storeCircleContainer: {
+    alignItems: 'center',
+    width: 80,
+  },
+  storeCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#E5E5EA',
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  storeCircleSelected: {
+    borderColor: '#000000',
+    borderWidth: 3,
+  },
+  storeLogoImage: {
+    width: 48,
+    height: 48,
+    resizeMode: 'contain',
+  },
+  storeLogoText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  storeLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontFamily: 'Inter_500Medium',
+    textAlign: 'center',
+  },
+  storeLabelSelected: {
+    color: '#000',
+    fontFamily: 'Inter_700Bold',
+  },
   card: {
     backgroundColor: '#F2F2F7',
     borderRadius: 16,
@@ -544,8 +868,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
   },
   pillSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    borderColor: '#000000',
   },
   pillText: {
     fontSize: 16,
@@ -553,8 +877,111 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   pillTextSelected: {
-    color: '#FFF',
+    color: '#000000',
     fontWeight: '700',
+  },
+  bigStepperContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 80,
+  },
+  bigStepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
+  },
+  bigStepperBtn: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F2F2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bigStepperBtnText: {
+    fontSize: 32,
+    fontWeight: '500',
+    color: '#000',
+    marginTop: -4,
+  },
+  bigStepperValueContainer: {
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  bigStepperValue: {
+    fontSize: 72,
+    fontFamily: 'Inter_700Bold',
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  bigStepperLabel: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 8,
+    fontFamily: 'Inter_400Regular',
+  },
+  applianceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    justifyContent: 'space-between',
+  },
+  applianceItem: {
+    alignItems: 'center',
+    width: '30%',
+    marginBottom: 16,
+  },
+  applianceBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#E5E5EA',
+    backgroundColor: '#F2F2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  applianceBoxSelected: {
+    borderColor: '#000000',
+  },
+  applianceEmoji: {
+    fontSize: 36,
+  },
+  applianceLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontFamily: 'Inter_500Medium',
+    textAlign: 'center',
+  },
+  applianceLabelSelected: {
+    color: '#000',
+    fontFamily: 'Inter_700Bold',
+  },
+  budgetContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 60,
+  },
+  budgetAmount: {
+    fontSize: 80,
+    fontFamily: 'Inter_700Bold',
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  budgetLabel: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 4,
+    fontFamily: 'Inter_400Regular',
+  },
+  sliderWrapper: {
+    width: '100%',
+    paddingHorizontal: 20,
+    marginTop: 60,
   },
   footer: {
     padding: 24,

@@ -39,6 +39,14 @@ export function WheelPicker({
     }
   }, [selectedValue, data.length]);
 
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const index = Math.round(y / itemHeight);
+    if (index >= 0 && index < data.length) {
+      setActiveIndex(index);
+    }
+  };
+
   const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     const index = Math.round(y / itemHeight);
@@ -61,6 +69,9 @@ export function WheelPicker({
         showsVerticalScrollIndicator={false}
         snapToInterval={itemHeight}
         decelerationRate="fast"
+        extraData={activeIndex}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         onMomentumScrollEnd={handleScrollEnd}
         onScrollEndDrag={handleScrollEnd}
         getItemLayout={(_, index) => ({ length: itemHeight, offset: itemHeight * index, index })}

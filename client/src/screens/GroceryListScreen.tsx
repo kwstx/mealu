@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
+    fontFamily: 'Inter_700Bold',
     fontWeight: '800',
     color: '#1a1a1a',
   },
@@ -143,11 +144,13 @@ const styles = StyleSheet.create({
   },
   storeLogoText: {
     fontSize: 8,
+    fontFamily: 'Inter_700Bold',
     fontWeight: 'bold',
     color: '#0050aa',
   },
   progressText: {
     fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
     fontWeight: '600',
     color: '#2A4365',
     paddingRight: 4,
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
     fontWeight: '600',
     color: '#4A5568',
   },
@@ -179,6 +183,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
+    fontFamily: 'Inter_700Bold',
     fontWeight: '700',
     color: '#8E8E93',
     letterSpacing: 1,
@@ -206,6 +211,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 16,
+    fontFamily: 'Inter_600SemiBold',
     fontWeight: '600',
     color: '#1a1a1a',
   },
@@ -215,11 +221,13 @@ const styles = StyleSheet.create({
   },
   itemNote: {
     fontSize: 15,
+    fontFamily: 'Inter_400Regular',
     color: '#8E8E93',
     fontWeight: '400',
   },
   itemQty: {
     fontSize: 15,
+    fontFamily: 'Inter_500Medium',
     color: '#8E8E93',
     fontWeight: '500',
     marginRight: 16,

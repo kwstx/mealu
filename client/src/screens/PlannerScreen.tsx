@@ -259,15 +259,8 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F5F6F9',
     borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
   },
   mealImage: {
     width: 110,

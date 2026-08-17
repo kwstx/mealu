@@ -94,17 +94,20 @@ export default function PlannerScreen() {
           </View>
         </View>
 
-        {/* Cost & Grocery List summary */}
+        {/* Calories & Grocery List summary */}
         <View style={styles.summaryContainer}>
-          <View style={styles.costSection}>
-            <Text style={styles.costLabel}>EST. COST</Text>
-            <View style={styles.costValues}>
-              <Text style={styles.costCurrent}>£22.82</Text>
-              <Text style={styles.costTotal}> / £23</Text>
+          <View style={styles.caloriesCard}>
+            <View style={styles.caloriesInfo}>
+              <View style={styles.caloriesValuesRow}>
+                <Text style={styles.caloriesCurrent} adjustsFontSizeToFit numberOfLines={1}>1250</Text>
+                <Text style={styles.caloriesTotal}>/2500</Text>
+              </View>
+              <Text style={styles.caloriesLabel} adjustsFontSizeToFit numberOfLines={1}>Calories eaten</Text>
             </View>
-            {/* Progress bar */}
-            <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: '99%' }]} />
+            <View style={styles.caloriesProgressContainer}>
+              <View style={styles.caloriesProgressTrack} />
+              <View style={styles.caloriesProgressFill} />
+              <FontAwesome5 name="fire" size={16} color="#1a1a1a" />
             </View>
           </View>
 
@@ -237,42 +240,73 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  costSection: {
+  caloriesCard: {
     flex: 1,
     marginRight: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
-  costLabel: {
-    fontSize: 10,
-    color: '#999',
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+  caloriesInfo: {
+    flex: 1,
+    marginRight: 8,
   },
-  costValues: {
+  caloriesValuesRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  costCurrent: {
+  caloriesCurrent: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1a1a1a',
+    letterSpacing: -1,
   },
-  costTotal: {
-    fontSize: 20,
-    color: '#ccc',
-    fontWeight: '600',
+  caloriesTotal: {
+    fontSize: 16,
+    color: '#999',
+    fontWeight: '500',
+    marginLeft: 2,
   },
-  progressBarTrack: {
-    height: 6,
-    backgroundColor: '#eee',
-    borderRadius: 3,
-    width: '100%',
+  caloriesLabel: {
+    fontSize: 13,
+    color: '#999',
+    fontWeight: '500',
   },
-  progressBarFill: {
-    height: 6,
-    backgroundColor: '#cddc39',
-    borderRadius: 3,
+  caloriesProgressContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  caloriesProgressTrack: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 5,
+    borderColor: '#EFEFEF',
+  },
+  caloriesProgressFill: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 5,
+    borderColor: 'transparent',
+    borderTopColor: '#1a1a1a',
+    borderRightColor: '#1a1a1a',
+    transform: [{ rotate: '45deg' }],
   },
   groceryListBtn: {
     backgroundColor: '#e3f2fd',

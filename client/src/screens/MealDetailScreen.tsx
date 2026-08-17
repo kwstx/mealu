@@ -66,100 +66,104 @@ export default function MealDetailScreen({ route, navigation }: Props) {
         {/* Spacer to push content down over the image */}
         <View style={styles.spacer} />
 
-        {/* Top Card: Title & Time */}
-        <View style={styles.topCard}>
-          <View style={styles.timeTag}>
-            <Feather name="bookmark" size={14} color="#1a1a1a" />
-            <Text style={styles.timeText}>{time}</Text>
-          </View>
+        {/* Single Unified Card */}
+        <View style={styles.unifiedCard}>
           
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{title}</Text>
+          {/* Top Section: Title & Time */}
+          <View style={styles.topSection}>
+            <View style={styles.timeTag}>
+              <Feather name="bookmark" size={14} color="#1a1a1a" />
+              <Text style={styles.timeText}>{time}</Text>
+            </View>
             
-            <View style={styles.stepper}>
-              <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.stepperBtn}>
-                <Feather name="minus" size={14} color="#1a1a1a" />
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{title}</Text>
+              
+              <View style={styles.stepper}>
+                <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.stepperBtn}>
+                  <Feather name="minus" size={14} color="#1a1a1a" />
+                </TouchableOpacity>
+                <Text style={styles.stepperValue}>{quantity}</Text>
+                <TouchableOpacity onPress={() => setQuantity(quantity + 1)} style={styles.stepperBtn}>
+                  <Feather name="plus" size={14} color="#1a1a1a" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Calories Pill inside the unified card */}
+          <View style={styles.caloriesPillWrapper}>
+            <View style={styles.caloriesPill}>
+              <View style={styles.flameIconContainer}>
+                <FontAwesome5 name="fire" size={24} color="#1a1a1a" />
+              </View>
+              <View style={styles.caloriesTextContainer}>
+                <Text style={styles.caloriesLabel}>Calories</Text>
+                <Text style={styles.caloriesValue}>{calories}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Bottom Section: Macros & Ingredients */}
+          <View style={styles.bottomSection}>
+            
+            {/* Macros Row */}
+            <View style={styles.macrosRow}>
+              <View style={styles.macroCard}>
+                <View style={styles.macroHeader}>
+                  <MaterialCommunityIcons name="food-drumstick" size={14} color="#e57373" />
+                  <Text style={styles.macroTitle}>Protein</Text>
+                </View>
+                <Text style={styles.macroAmount}>{protein}g</Text>
+              </View>
+
+              <View style={styles.macroCard}>
+                <View style={styles.macroHeader}>
+                  <FontAwesome5 name="wheat" size={12} color="#d4a373" />
+                  <Text style={styles.macroTitle}>Carbs</Text>
+                </View>
+                <Text style={styles.macroAmount}>{carbs}g</Text>
+              </View>
+
+              <View style={styles.macroCard}>
+                <View style={styles.macroHeader}>
+                  <MaterialCommunityIcons name="water" size={16} color="#64b5f6" style={{ marginTop: -2 }} />
+                  <Text style={styles.macroTitle}>Fats</Text>
+                </View>
+                <Text style={styles.macroAmount}>{fat}g</Text>
+              </View>
+            </View>
+
+            {/* Pagination Dots */}
+            <View style={styles.paginationDots}>
+              <View style={[styles.dot, styles.dotActive]} />
+              <View style={styles.dot} />
+            </View>
+
+            {/* Ingredients Section Header */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Ingredients</Text>
+              <TouchableOpacity style={styles.addMoreBtn}>
+                <Feather name="plus" size={16} color="#8e8e93" />
+                <Text style={styles.addMoreText}>Add more</Text>
               </TouchableOpacity>
-              <Text style={styles.stepperValue}>{quantity}</Text>
-              <TouchableOpacity onPress={() => setQuantity(quantity + 1)} style={styles.stepperBtn}>
-                <Feather name="plus" size={14} color="#1a1a1a" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* HUGE Calories Pill */}
-        <View style={styles.caloriesPillWrapper}>
-          <View style={styles.caloriesPill}>
-            <View style={styles.flameIconContainer}>
-              <FontAwesome5 name="fire" size={24} color="#1a1a1a" />
-            </View>
-            <View style={styles.caloriesTextContainer}>
-              <Text style={styles.caloriesLabel}>Calories</Text>
-              <Text style={styles.caloriesValue}>{calories}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* White Bottom Sheet Content */}
-        <View style={styles.bottomSheet}>
-          
-          {/* Macros Row */}
-          <View style={styles.macrosRow}>
-            <View style={styles.macroCard}>
-              <View style={styles.macroHeader}>
-                <MaterialCommunityIcons name="food-drumstick" size={14} color="#e57373" />
-                <Text style={styles.macroTitle}>Protein</Text>
-              </View>
-              <Text style={styles.macroAmount}>{protein}g</Text>
             </View>
 
-            <View style={styles.macroCard}>
-              <View style={styles.macroHeader}>
-                <FontAwesome5 name="wheat" size={12} color="#d4a373" />
-                <Text style={styles.macroTitle}>Carbs</Text>
-              </View>
-              <Text style={styles.macroAmount}>{carbs}g</Text>
+            {/* Ingredients List Container */}
+            <View style={styles.ingredientsContainer}>
+              {ingredients.map((ing, idx) => (
+                <View key={idx} style={[styles.ingredientRow, idx === ingredients.length - 1 && styles.ingredientRowLast]}>
+                  <Text style={styles.ingredientLeft}>
+                    <Text style={styles.ingredientName}>{ing.name}</Text>
+                    <Text style={styles.ingredientDot}> • </Text>
+                    <Text style={styles.ingredientCalories}>{ing.calories} cal</Text>
+                  </Text>
+                  <Text style={styles.ingredientAmount}>{ing.amount}</Text>
+                </View>
+              ))}
             </View>
-
-            <View style={styles.macroCard}>
-              <View style={styles.macroHeader}>
-                <MaterialCommunityIcons name="water" size={16} color="#64b5f6" style={{ marginTop: -2 }} />
-                <Text style={styles.macroTitle}>Fats</Text>
-              </View>
-              <Text style={styles.macroAmount}>{fat}g</Text>
-            </View>
+            
           </View>
-
-          {/* Pagination Dots */}
-          <View style={styles.paginationDots}>
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={styles.dot} />
-          </View>
-
-          {/* Ingredients Section Header */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            <TouchableOpacity style={styles.addMoreBtn}>
-              <Feather name="plus" size={16} color="#8e8e93" />
-              <Text style={styles.addMoreText}>Add more</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Ingredients List Container */}
-          <View style={styles.ingredientsContainer}>
-            {ingredients.map((ing, idx) => (
-              <View key={idx} style={[styles.ingredientRow, idx === ingredients.length - 1 && styles.ingredientRowLast]}>
-                <Text style={styles.ingredientLeft}>
-                  <Text style={styles.ingredientName}>{ing.name}</Text>
-                  <Text style={styles.ingredientDot}> • </Text>
-                  <Text style={styles.ingredientCalories}>{ing.calories} cal</Text>
-                </Text>
-                <Text style={styles.ingredientAmount}>{ing.amount}</Text>
-              </View>
-            ))}
-          </View>
-          
         </View>
       </ScrollView>
 
@@ -230,19 +234,21 @@ const styles = StyleSheet.create({
   spacer: {
     height: height * 0.4, // Pushes content down so the image is visible
   },
-  topCard: {
+  unifiedCard: {
     backgroundColor: '#fff',
-    marginHorizontal: 0,
-    borderRadius: 24,
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 44, // Extra bottom padding so the overlapping pill doesn't cover content
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 15,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: -6 },
     elevation: 5,
-    zIndex: 10,
+    minHeight: 600,
+  },
+  topSection: {
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 8,
   },
   timeTag: {
     flexDirection: 'row',
@@ -288,9 +294,8 @@ const styles = StyleSheet.create({
   },
   caloriesPillWrapper: {
     alignItems: 'center',
-    zIndex: 20,
-    marginTop: -25, // Overlap the topCard and the bottomSheet
-    paddingHorizontal: 16, // Align with topCard's horizontal margin
+    paddingHorizontal: 16,
+    marginVertical: 12,
   },
   caloriesPill: {
     width: '100%', 
@@ -330,15 +335,9 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     lineHeight: 34,
   },
-  bottomSheet: {
-    backgroundColor: '#fff',
-    marginTop: -45, // Pull it up BEHIND the calories pill
-    paddingTop: 75, // Add padding so content is below the pill
+  bottomSection: {
     paddingHorizontal: 20,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    zIndex: 5,
-    minHeight: 400, // Ensure it covers the bottom
+    paddingTop: 16,
   },
   macrosRow: {
     flexDirection: 'row',

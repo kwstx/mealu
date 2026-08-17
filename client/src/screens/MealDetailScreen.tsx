@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   topCard: {
     backgroundColor: '#fff',
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     borderRadius: 24,
     paddingTop: 24,
     paddingHorizontal: 24,

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Image, ScrollView, Animated } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { AppText as Text } from '../components/AppText';
@@ -260,6 +260,43 @@ const getDeviceRegion = () => {
 export default function OnboardingScreen({ navigation, route }: Props) {
   const [step, setStep] = useState(1);
   const totalSteps = 15;
+
+  const langAnimations = useRef(LANGUAGES.map(() => new Animated.Value(0))).current;
+  const goalsAnimations = useRef(GOALS_VOCABULARY.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    if (step === 1) {
+      Animated.stagger(
+        100,
+        langAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      langAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 4) {
+      Animated.stagger(
+        100,
+        goalsAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      goalsAnimations.forEach(anim => anim.setValue(0));
+    }
+  }, [step]);
 
   // Form State
   const [language, setLanguage] = useState<string>(getDeviceLanguage());
@@ -536,17 +573,38 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>We've detected your language. Please confirm or select your preferred language.</Text>
       
       <View style={styles.storeList}>
-        {LANGUAGES.map(lang => (
-          <TouchableOpacity 
-            key={lang.code} 
-            style={[styles.storeOption, language === lang.code && styles.storeOptionSelected]}
-            onPress={() => setLanguage(lang.code)}
-          >
-            <Text style={[styles.storeText, language === lang.code && styles.storeTextSelected]}>
-              {lang.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {LANGUAGES.map((lang, index) => {
+          const animStyle = {
+            opacity: langAnimations[index],
+            transform: [
+              {
+                scale: langAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: langAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+          
+          return (
+            <Animated.View key={lang.code} style={animStyle}>
+              <TouchableOpacity 
+                style={[styles.storeOption, language === lang.code && styles.storeOptionSelected]}
+                onPress={() => setLanguage(lang.code)}
+              >
+                <Text style={[styles.storeText, language === lang.code && styles.storeTextSelected]}>
+                  {lang.name}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
@@ -590,18 +648,37 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>Select all the goals that apply to you.</Text>
       
       <View style={styles.pillsContainer}>
-        {GOALS_VOCABULARY.map(goal => {
+        {GOALS_VOCABULARY.map((goal, index) => {
           const isSelected = goals.includes(goal);
+          const animStyle = {
+            opacity: goalsAnimations[index],
+            transform: [
+              {
+                scale: goalsAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: goalsAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
           return (
-            <TouchableOpacity
-              key={goal}
-              style={[styles.pill, isSelected && styles.pillSelected]}
-              onPress={() => toggleGoal(goal)}
-            >
-              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                {goal}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View key={goal} style={animStyle}>
+              <TouchableOpacity
+                style={[styles.pill, isSelected && styles.pillSelected]}
+                onPress={() => toggleGoal(goal)}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                  {goal}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </View>

@@ -33,28 +33,25 @@ export default function MealDetailScreen({ route, navigation }: Props) {
     { name: 'Caesar Dressing', calories: 125, amount: '2 tbsp' },
   ];
 
+  // Mock instructions
+  const instructions = [
+    'Rinse the rice thoroughly and cook according to the packet instructions.',
+    'Slice the pepper and half a red onion into thin strips.',
+    'Heat a frying pan over high heat with a little oil. Season the steak with salt.',
+    'Cook the steak for 2-4 minutes depending on thickness and preference.',
+    'Remove the steak and allow it to rest for 5 minutes.',
+    'In the same pan cook the pepper and half a red onion until softened.',
+    'Slice the steak into thin strips.',
+    'Drain the rice and fluff with a fork.',
+    'Divide the rice between bowls.'
+  ];
+
   return (
     <View style={styles.container}>
       
       {/* Absolute Background Image Layer */}
       <View style={styles.imageContainer}>
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
-        
-        {/* Header Overlay */}
-        <View style={[styles.headerOverlay, { paddingTop: Math.max(insets.top, 20) }]}>
-          <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={22} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Nutrition</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={[styles.headerBtn, { marginRight: 8 }]}>
-              <Feather name="share" size={20} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtn}>
-              <Feather name="more-horizontal" size={22} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
       </View>
 
       <ScrollView 
@@ -72,7 +69,7 @@ export default function MealDetailScreen({ route, navigation }: Props) {
           {/* Top Section: Title & Time */}
           <View style={styles.topSection}>
             <View style={styles.timeTag}>
-              <Feather name="bookmark" size={14} color="#1a1a1a" />
+              <Feather name="bookmark" size={16} color="#1a1a1a" />
               <Text style={styles.timeText}>{time}</Text>
             </View>
             
@@ -162,6 +159,19 @@ export default function MealDetailScreen({ route, navigation }: Props) {
                 </View>
               ))}
             </View>
+
+            {/* Instructions Section */}
+            <View style={styles.instructionsSection}>
+              <Text style={styles.instructionsTitle}>instructions</Text>
+              <View style={styles.instructionsContainer}>
+                {instructions.map((inst, idx) => (
+                  <View key={idx} style={[styles.instructionRow, idx === instructions.length - 1 && styles.instructionRowLast]}>
+                    <Text style={styles.instructionNumber}>{idx + 1}.</Text>
+                    <Text style={styles.instructionText}>{inst}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
             
           </View>
         </View>
@@ -177,6 +187,22 @@ export default function MealDetailScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.doneBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.doneBtnText}>Done</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Header Overlay */}
+      <View style={[styles.headerOverlay, { paddingTop: Math.max(insets.top, 20) }]}>
+        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Nutrition</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={[styles.headerBtn, { marginRight: 8 }]}>
+            <Feather name="share" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerBtn}>
+            <Feather name="more-horizontal" size={22} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -450,6 +476,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#8e8e93',
     fontFamily: 'Inter_500Medium',
+  },
+  instructionsSection: {
+    marginTop: 32,
+    marginBottom: 20,
+  },
+  instructionsTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  instructionsContainer: {
+    backgroundColor: '#fafafa',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e8e5c1',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  instructionRow: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    alignItems: 'flex-start',
+  },
+  instructionRowLast: {
+    marginBottom: 0,
+  },
+  instructionNumber: {
+    fontSize: 15,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+    marginRight: 10,
+    width: 18,
+  },
+  instructionText: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    color: '#333',
+    lineHeight: 22,
   },
   bottomBar: {
     position: 'absolute',

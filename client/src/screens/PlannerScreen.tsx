@@ -21,7 +21,7 @@ export default function PlannerScreen() {
       protein: 35,
       carbs: 40,
       fat: 28,
-      time: '12:37pm',
+      time: '30min',
       image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop'
     },
     {
@@ -33,7 +33,7 @@ export default function PlannerScreen() {
       protein: 28,
       carbs: 65,
       fat: 22,
-      time: '12:37pm',
+      time: '30min',
       image: 'https://images.unsplash.com/photo-1562014603-9b48b59828d1?w=400&h=400&fit=crop'
     },
     {
@@ -45,7 +45,7 @@ export default function PlannerScreen() {
       protein: 42,
       carbs: 15,
       fat: 24,
-      time: '12:37pm',
+      time: '30min',
       image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=400&fit=crop'
     },
     {
@@ -57,7 +57,7 @@ export default function PlannerScreen() {
       protein: 18,
       carbs: 58,
       fat: 26,
-      time: '12:37pm',
+      time: '30min',
       image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&h=400&fit=crop'
     }
   ] as const;

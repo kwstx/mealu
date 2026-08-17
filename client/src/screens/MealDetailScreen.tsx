@@ -1,285 +1,497 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
-import { ApiClient } from '../api/client';
+import { Feather, FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
+const { width, height } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MealDetail'>;
 
-interface RecipeDetail {
-  id: string;
-  title: string;
-  prep_instructions: string;
-  calories: number;
-  protein: string;
-  carbs: string;
-  fat: string;
-  ingredients: Array<{
-    name: string;
-    quantity: string;
-    unit: string;
-  }>;
-}
-
 export default function MealDetailScreen({ route, navigation }: Props) {
   const { meal } = route.params;
+  const insets = useSafeAreaInsets();
+  
+  // Use passed meal data or fallbacks
+  const imageUrl = (meal as any).image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=800&fit=crop';
+  const title = meal.title || 'Caesar Salad with Cherry Tomatoes';
+  const time = (meal as any).time || '6:21 PM';
+  const calories = meal.calories || 330;
+  const protein = meal.protein || 8;
+  const carbs = meal.carbs || 20;
+  const fat = (meal as any).fat || 18;
 
-  const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
+  const [quantity, setQuantity] = useState(1);
 
-  useEffect(() => {
-    const fetchRecipe = async () => {
-      try {
-        const data = await ApiClient.get(`/recipes/${meal.id}`);
-        setRecipe(data);
-      } catch (error) {
-        console.error('Failed to fetch recipe', error);
-        Alert.alert('Error', 'Could not load recipe details.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchRecipe();
-  }, [meal.id]);
-
-  const toggleIngredient = (name: string) => {
-    setCheckedIngredients(prev => ({ ...prev, [name]: !prev[name] }));
-  };
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <ActivityIndicator size="large" />
-      </SafeAreaView>
-    );
-  }
-
-  if (!recipe) {
-    return (
-      <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <Text>Could not load recipe.</Text>
-      </SafeAreaView>
-    );
-  }
+  // Mock ingredients
+  const ingredients = [
+    { name: 'Lettuce', calories: 20, amount: '1.5 cups' },
+    { name: 'Cherry Tomatoes', calories: 15, amount: '0.5 cups' },
+    { name: 'Parmesan Cheese', calories: 110, amount: '2 tbsp' },
+    { name: 'Croutons', calories: 60, amount: '1/4 cup' },
+    { name: 'Caesar Dressing', calories: 125, amount: '2 tbsp' },
+  ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Pressable 
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          onPress={() => navigation.goBack()} 
-          style={styles.backButton}>
-          <Text style={styles.backButtonText}>‹ Back</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Detail</Text>
-        <View style={styles.placeholder} />
-      </View>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.type}>{meal.type}</Text>
-        <Text style={styles.title}>{recipe.title || meal.title}</Text>
+    <View style={styles.container}>
+      
+      {/* Absolute Background Image Layer */}
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
         
-        <View style={styles.macrosContainer}>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Calories: ${recipe.calories || meal.calories || 0}`}>
-            <Text style={styles.macroValue}>{recipe.calories || meal.calories || 0}</Text>
-            <Text style={styles.macroLabel}>kcal</Text>
+        {/* Header Overlay */}
+        <View style={[styles.headerOverlay, { paddingTop: Math.max(insets.top, 20) }]}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+            <Feather name="arrow-left" size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Nutrition</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={[styles.headerBtn, { marginRight: 8 }]}>
+              <Feather name="share" size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerBtn}>
+              <Feather name="more-horizontal" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Protein: ${recipe.protein || 0} grams`}>
-            <Text style={styles.macroValue}>{parseFloat(recipe.protein || '0')}g</Text>
-            <Text style={styles.macroLabel}>Protein</Text>
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* Spacer to push content down over the image */}
+        <View style={styles.spacer} />
+
+        {/* Top Card: Title & Time */}
+        <View style={styles.topCard}>
+          <View style={styles.timeTag}>
+            <Feather name="bookmark" size={14} color="#1a1a1a" />
+            <Text style={styles.timeText}>{time}</Text>
           </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Carbs: ${recipe.carbs || 0} grams`}>
-            <Text style={styles.macroValue}>{parseFloat(recipe.carbs || '0')}g</Text>
-            <Text style={styles.macroLabel}>Carbs</Text>
-          </View>
-          <View style={styles.macroBadge} accessible={true} accessibilityLabel={`Fat: ${recipe.fat || 0} grams`}>
-            <Text style={styles.macroValue}>{parseFloat(recipe.fat || '0')}g</Text>
-            <Text style={styles.macroLabel}>Fat</Text>
+          
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{title}</Text>
+            
+            <View style={styles.stepper}>
+              <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.stepperBtn}>
+                <Feather name="minus" size={14} color="#1a1a1a" />
+              </TouchableOpacity>
+              <Text style={styles.stepperValue}>{quantity}</Text>
+              <TouchableOpacity onPress={() => setQuantity(quantity + 1)} style={styles.stepperBtn}>
+                <Feather name="plus" size={14} color="#1a1a1a" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Ingredients Checklist</Text>
-        <View style={styles.checklistCard}>
-          {recipe.ingredients?.map((ing, idx) => {
-            const isChecked = !!checkedIngredients[ing.name];
-            return (
-              <Pressable 
-                key={idx} 
-                accessible={true}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: isChecked }}
-                accessibilityLabel={`${ing.name}, ${ing.quantity} ${ing.unit}`}
-                style={styles.ingredientRow}
-                onPress={() => toggleIngredient(ing.name)}
-              >
-                <View style={[styles.checkbox, isChecked && styles.checkboxChecked]} />
-                <Text style={[styles.ingredientName, isChecked && styles.ingredientChecked]}>
-                  {ing.name}
-                </Text>
-                <Text style={[styles.ingredientAmount, isChecked && styles.ingredientChecked]}>
-                  {`${ing.quantity} ${ing.unit}`}
-                </Text>
-              </Pressable>
-            );
-          })}
+        {/* HUGE Calories Pill */}
+        <View style={styles.caloriesPillWrapper}>
+          <View style={styles.caloriesPill}>
+            <View style={styles.flameIconContainer}>
+              <FontAwesome5 name="fire" size={24} color="#1a1a1a" />
+            </View>
+            <View style={styles.caloriesTextContainer}>
+              <Text style={styles.caloriesLabel}>Calories</Text>
+              <Text style={styles.caloriesValue}>{calories}</Text>
+            </View>
+          </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Instructions</Text>
-        <View style={styles.recipeCard}>
-          <Text style={styles.recipeText}>{recipe.prep_instructions || "No instructions provided."}</Text>
+        {/* White Bottom Sheet Content */}
+        <View style={styles.bottomSheet}>
+          
+          {/* Macros Row */}
+          <View style={styles.macrosRow}>
+            <View style={styles.macroCard}>
+              <View style={styles.macroHeader}>
+                <MaterialCommunityIcons name="food-drumstick" size={14} color="#e57373" />
+                <Text style={styles.macroTitle}>Protein</Text>
+              </View>
+              <Text style={styles.macroAmount}>{protein}g</Text>
+            </View>
+
+            <View style={styles.macroCard}>
+              <View style={styles.macroHeader}>
+                <FontAwesome5 name="wheat" size={12} color="#d4a373" />
+                <Text style={styles.macroTitle}>Carbs</Text>
+              </View>
+              <Text style={styles.macroAmount}>{carbs}g</Text>
+            </View>
+
+            <View style={styles.macroCard}>
+              <View style={styles.macroHeader}>
+                <MaterialCommunityIcons name="water" size={16} color="#64b5f6" style={{ marginTop: -2 }} />
+                <Text style={styles.macroTitle}>Fats</Text>
+              </View>
+              <Text style={styles.macroAmount}>{fat}g</Text>
+            </View>
+          </View>
+
+          {/* Pagination Dots */}
+          <View style={styles.paginationDots}>
+            <View style={[styles.dot, styles.dotActive]} />
+            <View style={styles.dot} />
+          </View>
+
+          {/* Ingredients Section Header */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+            <TouchableOpacity style={styles.addMoreBtn}>
+              <Feather name="plus" size={16} color="#8e8e93" />
+              <Text style={styles.addMoreText}>Add more</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Ingredients List Container */}
+          <View style={styles.ingredientsContainer}>
+            {ingredients.map((ing, idx) => (
+              <View key={idx} style={[styles.ingredientRow, idx === ingredients.length - 1 && styles.ingredientRowLast]}>
+                <Text style={styles.ingredientLeft}>
+                  <Text style={styles.ingredientName}>{ing.name}</Text>
+                  <Text style={styles.ingredientDot}> • </Text>
+                  <Text style={styles.ingredientCalories}>{ing.calories} cal</Text>
+                </Text>
+                <Text style={styles.ingredientAmount}>{ing.amount}</Text>
+              </View>
+            ))}
+          </View>
+          
         </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Bottom Pinned Action Bar */}
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <TouchableOpacity style={styles.fixResultsBtn}>
+          <Ionicons name="sparkles" size={18} color="#1a1a1a" />
+          <Text style={styles.fixResultsText}>Fix Results</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.doneBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.doneBtnText}>Done</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  imageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.55, 
   },
-  header: {
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    paddingBottom: 10,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#007aff',
-    fontWeight: '600',
+  headerBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(30, 30, 30, 0.4)', // Dark translucent
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#333',
+    color: '#fff',
+    fontSize: 18,
+    fontFamily: 'Inter_700Bold',
   },
-  placeholder: {
-    width: 50,
+  headerRight: {
+    flexDirection: 'row',
   },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
+  scrollView: {
+    flex: 1,
   },
-  type: {
-    fontSize: 13,
-    color: '#007aff',
-    textTransform: 'uppercase',
-    fontWeight: '700',
-    marginBottom: 4,
+  scrollContent: {
+    paddingBottom: 120, // Leave space for the pinned bottom bar
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
+  spacer: {
+    height: height * 0.4, // Pushes content down so the image is visible
+  },
+  topCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 24,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 44, // Extra bottom padding so the overlapping pill doesn't cover content
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+    zIndex: 10,
+  },
+  timeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  timeText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Inter_700Bold',
     color: '#1a1a1a',
-    marginBottom: 24,
   },
-  macrosContainer: {
+  titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  title: {
+    flex: 1,
+    fontSize: 24,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+    marginRight: 16,
+    lineHeight: 30,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  stepperBtn: {
+    paddingHorizontal: 6,
+  },
+  stepperValue: {
+    marginHorizontal: 12,
+    fontSize: 16,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+  },
+  caloriesPillWrapper: {
+    alignItems: 'center',
+    zIndex: 20,
+    marginTop: -25, // Overlap the topCard and the bottomSheet
+    paddingHorizontal: 16, // Align with topCard's horizontal margin
+  },
+  caloriesPill: {
+    width: '100%', 
+    backgroundColor: '#fff',
+    borderRadius: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20, 
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  flameIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: '#f4f4f7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  caloriesTextContainer: {
+    justifyContent: 'center',
+  },
+  caloriesLabel: {
+    fontSize: 13,
+    color: '#1a1a1a',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 0,
+  },
+  caloriesValue: {
+    fontSize: 32,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+    lineHeight: 34,
+  },
+  bottomSheet: {
+    backgroundColor: '#fff',
+    marginTop: -45, // Pull it up BEHIND the calories pill
+    paddingTop: 75, // Add padding so content is below the pill
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    zIndex: 5,
+    minHeight: 400, // Ensure it covers the bottom
+  },
+  macrosRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  macroCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f4f4f7',
+    alignItems: 'center',
+  },
+  macroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  macroTitle: {
+    fontSize: 13,
+    color: '#8e8e93',
+    marginLeft: 6,
+    fontFamily: 'Inter_500Medium',
+  },
+  macroAmount: {
+    fontSize: 18,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+  },
+  paginationDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 32,
   },
-  macroBadge: {
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#d1d1d6',
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    backgroundColor: '#1a1a1a',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-    minWidth: 75,
-  },
-  macroValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-  },
-  macroLabel: {
-    fontSize: 12,
-    color: '#888',
-    textTransform: 'uppercase',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
   },
-  checklistCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+  addMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addMoreText: {
+    fontSize: 15,
+    color: '#8e8e93',
+    fontFamily: 'Inter_500Medium',
+    marginLeft: 4,
+  },
+  ingredientsContainer: {
+    backgroundColor: '#f9f9fb', // Very faint blue/gray
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   ingredientRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ebebf0',
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#d1d1d6',
-    marginRight: 12,
+  ingredientRowLast: {
+    borderBottomWidth: 0,
   },
-  checkboxChecked: {
-    backgroundColor: '#007aff',
-    borderColor: '#007aff',
+  ingredientLeft: {
+    flex: 1,
   },
   ingredientName: {
-    flex: 1,
     fontSize: 16,
-    color: '#333',
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+  },
+  ingredientDot: {
+    fontSize: 14,
+    color: '#8e8e93',
+  },
+  ingredientCalories: {
+    fontSize: 15,
+    color: '#8e8e93',
+    fontFamily: 'Inter_500Medium',
   },
   ingredientAmount: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#8e8e93',
+    fontFamily: 'Inter_500Medium',
   },
-  ingredientChecked: {
-    color: '#a0a0a0',
-    textDecorationLine: 'line-through',
-  },
-  recipeCard: {
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  recipeText: {
+  fixResultsBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    borderRadius: 30,
+    paddingVertical: 16,
+    marginRight: 12,
+  },
+  fixResultsText: {
     fontSize: 16,
-    lineHeight: 26,
-    color: '#444',
+    fontFamily: 'Inter_700Bold',
+    color: '#1a1a1a',
+    marginLeft: 8,
+  },
+  doneBtn: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  doneBtnText: {
+    fontSize: 16,
+    fontFamily: 'Inter_700Bold',
+    color: '#fff',
   }
 });

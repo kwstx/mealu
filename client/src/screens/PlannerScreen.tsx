@@ -2,10 +2,19 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { AppText as Text } from '../components/AppText';
 import { Feather, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function PlannerScreen() {
+  const navigation = useNavigation<NavigationProp>();
+
   const daysData = [
     {
+      id: 'mock-1',
+      type: 'lunch',
       day: 'MONDAY',
       title: 'Steak & Rice Bowls',
       calories: 550,
@@ -16,6 +25,8 @@ export default function PlannerScreen() {
       image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop'
     },
     {
+      id: 'mock-2',
+      type: 'dinner',
       day: 'TUESDAY',
       title: 'Spicy Sausage Tomato Spaghetti',
       calories: 620,
@@ -26,6 +37,8 @@ export default function PlannerScreen() {
       image: 'https://images.unsplash.com/photo-1562014603-9b48b59828d1?w=400&h=400&fit=crop'
     },
     {
+      id: 'mock-3',
+      type: 'dinner',
       day: 'WEDNESDAY',
       title: 'Garlic Lime Chicken',
       calories: 480,
@@ -36,6 +49,8 @@ export default function PlannerScreen() {
       image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=400&fit=crop'
     },
     {
+      id: 'mock-4',
+      type: 'lunch',
       day: 'THURSDAY',
       title: 'Cashew Honey Broccoli Noodles',
       calories: 510,
@@ -45,7 +60,7 @@ export default function PlannerScreen() {
       time: '12:37pm',
       image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&h=400&fit=crop'
     }
-  ];
+  ] as const;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -90,7 +105,11 @@ export default function PlannerScreen() {
             <View key={index} style={styles.dayCardWrapper}>
               <Text style={styles.dayLabelText}>{item.day}</Text>
               
-              <View style={styles.dayCard}>
+              <TouchableOpacity 
+                style={styles.dayCard} 
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('MealDetail', { meal: item as any })}
+              >
                 <Image source={{ uri: item.image }} style={styles.mealImage} />
                 
                 <View style={styles.mealInfo}>
@@ -117,7 +136,7 @@ export default function PlannerScreen() {
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             </View>
           ))}
         </View>

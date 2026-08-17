@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   MealDetail: { meal: Meal };
+  GroceryList: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

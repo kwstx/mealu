@@ -99,10 +99,10 @@ export default function PlannerScreen() {
           <View style={styles.caloriesCard}>
             <View style={styles.caloriesInfo}>
               <View style={styles.caloriesValuesRow}>
-                <Text style={styles.caloriesCurrent} adjustsFontSizeToFit numberOfLines={1}>1250</Text>
-                <Text style={styles.caloriesTotal}>/2500</Text>
+                <Text style={styles.caloriesCurrent} adjustsFontSizeToFit numberOfLines={1}>£22.82</Text>
+                <Text style={styles.caloriesTotal}>£23</Text>
               </View>
-              <Text style={styles.caloriesLabel} adjustsFontSizeToFit numberOfLines={1}>Calories eaten</Text>
+              <Text style={styles.caloriesLabel} adjustsFontSizeToFit numberOfLines={1}>Weekly Cost Overview</Text>
             </View>
             <View style={styles.caloriesProgressContainer}>
               <View style={styles.caloriesProgressTrack} />
@@ -111,7 +111,10 @@ export default function PlannerScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.groceryListBtn}>
+          <TouchableOpacity 
+            style={styles.groceryListBtn}
+            onPress={() => navigation.navigate('GroceryList')}
+          >
             <Text style={styles.groceryListTap}>TAP TO VIEW</Text>
             <Text style={styles.groceryListTitle}>Grocery list</Text>
             <Text style={styles.groceryListSub}>0/17 items bought</Text>

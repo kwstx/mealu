@@ -181,7 +181,7 @@ export default function MealDetailScreen({ route, navigation }: Props) {
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         <TouchableOpacity style={styles.fixResultsBtn}>
           <Ionicons name="sparkles" size={18} color="#1a1a1a" />
-          <Text style={styles.fixResultsText}>Fix Results</Text>
+          <Text style={styles.fixResultsText}>Swap Meal</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.doneBtn} onPress={() => navigation.goBack()}>

@@ -7,6 +7,7 @@ import TabNavigator from './TabNavigator';
 import AuthNavigator from './AuthNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import MealDetailScreen from '../screens/MealDetailScreen';
+import GroceryListScreen from '../screens/GroceryListScreen';
 import { getJwtPair, storage, STORAGE_KEYS, setJwtPair } from '../storage';
 import { ApiClient } from '../api/client';
 import * as Linking from 'expo-linking';
@@ -134,6 +135,14 @@ export default function RootNavigation() {
               <Stack.Screen 
                 name="MealDetail" 
                 component={MealDetailScreen} 
+                options={{
+                  presentation: 'card',
+                  gestureEnabled: true,
+                }}
+              />
+              <Stack.Screen 
+                name="GroceryList" 
+                component={GroceryListScreen} 
                 options={{
                   presentation: 'card',
                   gestureEnabled: true,

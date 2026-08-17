@@ -8,19 +8,19 @@ const mockData = [
   {
     category: 'FRUIT & VEG',
     items: [
-      { id: '1', emoji: '🥦', name: 'Broccoli', note: 'half needed', qty: '' },
-      { id: '2', emoji: '🥫', name: 'Chopped Tomatoes', note: '200g needed', qty: '400g' },
-      { id: '3', emoji: '🧄', name: 'Garlic', note: '17.5g needed', qty: '1' },
-      { id: '4', emoji: '🍋', name: 'Lime', note: '1 needed', qty: '1' },
-      { id: '5', emoji: '🫑', name: 'Peppers', note: '½ needed', qty: '1' },
-      { id: '6', emoji: '🧅', name: 'Red Onion', note: '¼ needed', qty: '1' },
-      { id: '7', emoji: '🧅', name: 'Spring Onion', note: '1 needed', qty: '1' },
+      { id: '1', emoji: '🥦', name: 'Broccoli', note: 'half needed', qty: '', price: '$1.50' },
+      { id: '2', emoji: '🥫', name: 'Chopped Tomatoes', note: '200g needed', qty: '400g', price: '$0.80' },
+      { id: '3', emoji: '🧄', name: 'Garlic', note: '17.5g needed', qty: '1', price: '$0.50' },
+      { id: '4', emoji: '🍋', name: 'Lime', note: '1 needed', qty: '1', price: '$0.60' },
+      { id: '5', emoji: '🫑', name: 'Peppers', note: '½ needed', qty: '1', price: '$1.20' },
+      { id: '6', emoji: '🧅', name: 'Red Onion', note: '¼ needed', qty: '1', price: '$0.40' },
+      { id: '7', emoji: '🧅', name: 'Spring Onion', note: '1 needed', qty: '1', price: '$0.70' },
     ]
   },
   {
     category: 'MEAT & FISH',
     items: [
-      { id: '8', emoji: '🍗', name: 'Chicken Breast', note: '300g needed', qty: '300g' },
+      { id: '8', emoji: '🍗', name: 'Chicken Breast', note: '300g needed', qty: '300g', price: '$5.00' },
     ]
   }
 ];
@@ -84,6 +84,7 @@ export default function GroceryListScreen() {
                     </Text>
                     <Text style={styles.itemNote}> ({item.note})</Text>
                   </Text>
+                  {item.price && <Text style={styles.itemPrice}>{item.price}</Text>}
                 </View>
                 {item.qty ? <Text style={styles.itemQty}>{item.qty}</Text> : <View style={styles.qtyPlaceholder} />}
                 <View style={[styles.checkbox, checkedItems[item.id] && styles.checkboxChecked]}>
@@ -163,13 +164,19 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#1a1a1a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   actionText: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
     fontWeight: '600',
-    color: '#4A5568',
+    color: '#1a1a1a',
   },
   container: {
     flex: 1,
@@ -224,6 +231,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     color: '#8E8E93',
     fontWeight: '400',
+  },
+  itemPrice: {
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: '#8E8E93',
+    marginTop: 2,
   },
   itemQty: {
     fontSize: 15,

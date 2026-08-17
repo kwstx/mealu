@@ -263,6 +263,14 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   const langAnimations = useRef(LANGUAGES.map(() => new Animated.Value(0))).current;
   const goalsAnimations = useRef(GOALS_VOCABULARY.map(() => new Animated.Value(0))).current;
+  const hurdleAnimations = useRef(HURDLES.map(() => new Animated.Value(0))).current;
+  const dietAnimations = useRef(DIET_VOCABULARY.map(() => new Animated.Value(0))).current;
+  const cookingTimeAnimations = useRef(COOKING_TIMES.map(() => new Animated.Value(0))).current;
+  const daysAnimations = useRef(DAYS_OF_WEEK.map(() => new Animated.Value(0))).current;
+  const applianceAnimations = useRef(APPLIANCES.map(() => new Animated.Value(0))).current;
+  const moodsAnimations = useRef(MOODS_VOCABULARY.map(() => new Animated.Value(0))).current;
+  const countryAnimations = useRef(COUNTRIES.map(() => new Animated.Value(0))).current;
+  const subCountryAnimations = useRef([...Array(60)].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     if (step === 1) {
@@ -295,6 +303,134 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       ).start();
     } else {
       goalsAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 5) {
+      Animated.stagger(
+        100,
+        hurdleAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      hurdleAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 7) {
+      Animated.stagger(
+        100,
+        dietAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      dietAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 8) {
+      Animated.stagger(
+        100,
+        cookingTimeAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      cookingTimeAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 9) {
+      Animated.stagger(
+        100,
+        daysAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      daysAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 10) {
+      Animated.stagger(
+        100,
+        applianceAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      applianceAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 12) {
+      Animated.stagger(
+        100,
+        moodsAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      moodsAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 13) {
+      Animated.stagger(
+        100,
+        countryAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      countryAnimations.forEach(anim => anim.setValue(0));
+    }
+
+    if (step === 14) {
+      Animated.stagger(
+        100,
+        subCountryAnimations.map(anim =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 8,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      subCountryAnimations.forEach(anim => anim.setValue(0));
     }
   }, [step]);
 
@@ -691,17 +827,38 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>We'll use this to guide your experience.</Text>
       
       <View style={styles.storeList}>
-        {HURDLES.map(h => (
-          <TouchableOpacity 
-            key={h} 
-            style={[styles.storeOption, hurdle === h && styles.storeOptionSelected]}
-            onPress={() => setHurdle(h)}
-          >
-            <Text style={[styles.storeText, hurdle === h && styles.storeTextSelected]}>
-              {h}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {HURDLES.map((h, index) => {
+          const animStyle = {
+            opacity: hurdleAnimations[index],
+            transform: [
+              {
+                scale: hurdleAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: hurdleAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
+          return (
+            <Animated.View key={h} style={animStyle}>
+              <TouchableOpacity 
+                style={[styles.storeOption, hurdle === h && styles.storeOptionSelected]}
+                onPress={() => setHurdle(h)}
+              >
+                <Text style={[styles.storeText, hurdle === h && styles.storeTextSelected]}>
+                  {h}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
@@ -734,18 +891,37 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>Select all that apply.</Text>
       
       <View style={styles.pillsContainer}>
-        {DIET_VOCABULARY.map(diet => {
+        {DIET_VOCABULARY.map((diet, index) => {
           const isSelected = dietConstraints.includes(diet);
+          const animStyle = {
+            opacity: dietAnimations[index],
+            transform: [
+              {
+                scale: dietAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: dietAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
           return (
-            <TouchableOpacity
-              key={diet}
-              style={[styles.pill, isSelected && styles.pillSelected]}
-              onPress={() => toggleDiet(diet)}
-            >
-              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                {diet}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View key={diet} style={animStyle}>
+              <TouchableOpacity
+                style={[styles.pill, isSelected && styles.pillSelected]}
+                onPress={() => toggleDiet(diet)}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                  {diet}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </View>
@@ -758,17 +934,38 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>We'll only suggest recipes that fit your schedule.</Text>
       
       <View style={styles.storeList}>
-        {COOKING_TIMES.map(time => (
-          <TouchableOpacity 
-            key={time} 
-            style={[styles.storeOption, cookingTime === time && styles.storeOptionSelected]}
-            onPress={() => setCookingTime(time)}
-          >
-            <Text style={[styles.storeText, cookingTime === time && styles.storeTextSelected]}>
-              {time}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {COOKING_TIMES.map((time, index) => {
+          const animStyle = {
+            opacity: cookingTimeAnimations[index],
+            transform: [
+              {
+                scale: cookingTimeAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: cookingTimeAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
+          return (
+            <Animated.View key={time} style={animStyle}>
+              <TouchableOpacity 
+                style={[styles.storeOption, cookingTime === time && styles.storeOptionSelected]}
+                onPress={() => setCookingTime(time)}
+              >
+                <Text style={[styles.storeText, cookingTime === time && styles.storeTextSelected]}>
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
@@ -779,18 +976,37 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>Select the days you typically cook at home.</Text>
       
       <View style={styles.pillsContainer}>
-        {DAYS_OF_WEEK.map(day => {
+        {DAYS_OF_WEEK.map((day, index) => {
           const isSelected = plannedDays.includes(day);
+          const animStyle = {
+            opacity: daysAnimations[index],
+            transform: [
+              {
+                scale: daysAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: daysAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
           return (
-            <TouchableOpacity
-              key={day}
-              style={[styles.pill, isSelected && styles.pillSelected]}
-              onPress={() => toggleDay(day)}
-            >
-              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                {day}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View key={day} style={animStyle}>
+              <TouchableOpacity
+                style={[styles.pill, isSelected && styles.pillSelected]}
+                onPress={() => toggleDay(day)}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </View>
@@ -803,10 +1019,28 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>We'll only show recipes you can actually make.</Text>
       
       <View style={styles.applianceGrid}>
-        {APPLIANCES.map(app => {
+        {APPLIANCES.map((app, index) => {
           const isSelected = appliances.includes(app.id);
+          const animStyle = {
+            opacity: applianceAnimations[index],
+            transform: [
+              {
+                scale: applianceAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: applianceAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
           return (
-            <View key={app.id} style={styles.applianceItem}>
+            <Animated.View key={app.id} style={[styles.applianceItem, animStyle]}>
               <TouchableOpacity
                 style={[styles.applianceBox, isSelected && styles.applianceBoxSelected]}
                 onPress={() => toggleAppliance(app.id)}
@@ -814,7 +1048,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
                 <Text style={styles.applianceEmoji}>{app.emoji}</Text>
               </TouchableOpacity>
               <Text style={[styles.applianceLabel, isSelected && styles.applianceLabelSelected]}>{app.name}</Text>
-            </View>
+            </Animated.View>
           );
         })}
       </View>
@@ -849,18 +1083,37 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>Select the types of meals you're currently craving.</Text>
       
       <View style={styles.pillsContainer}>
-        {MOODS_VOCABULARY.map(mood => {
+        {MOODS_VOCABULARY.map((mood, index) => {
           const isSelected = moods.includes(mood);
+          const animStyle = {
+            opacity: moodsAnimations[index],
+            transform: [
+              {
+                scale: moodsAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: moodsAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
           return (
-            <TouchableOpacity
-              key={mood}
-              style={[styles.pill, isSelected && styles.pillSelected]}
-              onPress={() => toggleMood(mood)}
-            >
-              <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                {mood}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View key={mood} style={animStyle}>
+              <TouchableOpacity
+                style={[styles.pill, isSelected && styles.pillSelected]}
+                onPress={() => toggleMood(mood)}
+              >
+                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
+                  {mood}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           );
         })}
       </View>
@@ -875,17 +1128,38 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         <Text style={styles.subtitle}>This helps us tailor recipes with local ingredients.</Text>
         
         <ScrollView contentContainerStyle={styles.storeList} showsVerticalScrollIndicator={false}>
-          {subCountries.map(c => (
-            <TouchableOpacity 
-              key={c.id} 
-              style={[styles.storeOption, specificCountry === c.id && styles.storeOptionSelected]}
-              onPress={() => setSpecificCountry(c.id)}
-            >
-              <Text style={[styles.storeText, specificCountry === c.id && styles.storeTextSelected]}>
-                {c.flag}  {c.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {subCountries.map((c, index) => {
+            const animStyle = {
+              opacity: subCountryAnimations[index] || 1, // Fallback to 1 just in case
+              transform: [
+                {
+                  scale: (subCountryAnimations[index] || new Animated.Value(1)).interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1],
+                  }),
+                },
+                {
+                  translateY: (subCountryAnimations[index] || new Animated.Value(0)).interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                }
+              ],
+            };
+
+            return (
+              <Animated.View key={c.id} style={animStyle}>
+                <TouchableOpacity 
+                  style={[styles.storeOption, specificCountry === c.id && styles.storeOptionSelected]}
+                  onPress={() => setSpecificCountry(c.id)}
+                >
+                  <Text style={[styles.storeText, specificCountry === c.id && styles.storeTextSelected]}>
+                    {c.flag}  {c.name}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </ScrollView>
       </View>
     );
@@ -940,17 +1214,38 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       <Text style={styles.subtitle}>This helps us tailor recipes with local ingredients and correct units.</Text>
       
       <ScrollView contentContainerStyle={styles.storeList} showsVerticalScrollIndicator={false}>
-        {COUNTRIES.map(c => (
-          <TouchableOpacity 
-            key={c.id} 
-            style={[styles.storeOption, country === c.id && styles.storeOptionSelected]}
-            onPress={() => setCountry(c.id)}
-          >
-            <Text style={[styles.storeText, country === c.id && styles.storeTextSelected]}>
-              {c.flag}  {c.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {COUNTRIES.map((c, index) => {
+          const animStyle = {
+            opacity: countryAnimations[index],
+            transform: [
+              {
+                scale: countryAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+              {
+                translateY: countryAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              }
+            ],
+          };
+
+          return (
+            <Animated.View key={c.id} style={animStyle}>
+              <TouchableOpacity 
+                style={[styles.storeOption, country === c.id && styles.storeOptionSelected]}
+                onPress={() => setCountry(c.id)}
+              >
+                <Text style={[styles.storeText, country === c.id && styles.storeTextSelected]}>
+                  {c.flag}  {c.name}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
       </ScrollView>
     </View>
   );

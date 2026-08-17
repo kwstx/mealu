@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image, Animated } from 'react-native';
 import { AppText as Text } from '../components/AppText';
 import { Feather, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -62,6 +62,22 @@ export default function PlannerScreen() {
     }
   ] as const;
 
+  const cardAnimations = useRef(daysData.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    Animated.stagger(
+      100,
+      cardAnimations.map(anim =>
+        Animated.spring(anim, {
+          toValue: 1,
+          friction: 8,
+          tension: 50,
+          useNativeDriver: true,
+        })
+      )
+    ).start();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -101,44 +117,64 @@ export default function PlannerScreen() {
 
         {/* Days List */}
         <View style={styles.daysList}>
-          {daysData.map((item, index) => (
-            <View key={index} style={styles.dayCardWrapper}>
-              <Text style={styles.dayLabelText}>{item.day}</Text>
-              
-              <TouchableOpacity 
-                style={styles.dayCard} 
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate('MealDetail', { meal: item as any })}
-              >
-                <Image source={{ uri: item.image }} style={styles.mealImage} />
+          {daysData.map((item, index) => {
+            const animStyle = {
+              opacity: cardAnimations[index],
+              transform: [
+                {
+                  scale: cardAnimations[index].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1],
+                  }),
+                },
+                {
+                  translateY: cardAnimations[index].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                }
+              ],
+            };
+
+            return (
+              <Animated.View key={index} style={[styles.dayCardWrapper, animStyle]}>
+                <Text style={styles.dayLabelText}>{item.day}</Text>
                 
-                <View style={styles.mealInfo}>
-                  <Text style={styles.timeText}>{item.time}</Text>
-                  <Text style={styles.mealTitle} numberOfLines={1}>{item.title}</Text>
+                <TouchableOpacity 
+                  style={styles.dayCard} 
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('MealDetail', { meal: item as any })}
+                >
+                  <Image source={{ uri: item.image }} style={styles.mealImage} />
                   
-                  <View style={styles.caloriesRow}>
-                    <FontAwesome5 name="fire" size={16} color="#1a1a1a" />
-                    <Text style={styles.caloriesText}>{item.calories} Calories</Text>
+                  <View style={styles.mealInfo}>
+                    <Text style={styles.timeText}>{item.time}</Text>
+                    <Text style={styles.mealTitle} numberOfLines={1}>{item.title}</Text>
+                    
+                    <View style={styles.caloriesRow}>
+                      <FontAwesome5 name="fire" size={16} color="#1a1a1a" />
+                      <Text style={styles.caloriesText}>{item.calories} Calories</Text>
+                    </View>
+                    
+                    <View style={styles.macrosRow}>
+                      <View style={styles.macroItem}>
+                        <MaterialCommunityIcons name="food-drumstick" size={16} color="#e57373" />
+                        <Text style={styles.macroText}>{item.protein}g</Text>
+                      </View>
+                      <View style={styles.macroItem}>
+                        <FontAwesome5 name="wheat" size={14} color="#d4a373" />
+                        <Text style={styles.macroText}>{item.carbs}g</Text>
+                      </View>
+                      <View style={styles.macroItem}>
+                        <MaterialCommunityIcons name="water" size={18} color="#64b5f6" style={{ marginTop: -2 }} />
+                        <Text style={styles.macroText}>{item.fat}g</Text>
+                      </View>
+                    </View>
                   </View>
-                  
-                  <View style={styles.macrosRow}>
-                    <View style={styles.macroItem}>
-                      <MaterialCommunityIcons name="food-drumstick" size={16} color="#e57373" />
-                      <Text style={styles.macroText}>{item.protein}g</Text>
-                    </View>
-                    <View style={styles.macroItem}>
-                      <FontAwesome5 name="wheat" size={14} color="#d4a373" />
-                      <Text style={styles.macroText}>{item.carbs}g</Text>
-                    </View>
-                    <View style={styles.macroItem}>
-                      <MaterialCommunityIcons name="water" size={18} color="#64b5f6" style={{ marginTop: -2 }} />
-                      <Text style={styles.macroText}>{item.fat}g</Text>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </View>
 
       </ScrollView>
